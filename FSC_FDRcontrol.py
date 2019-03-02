@@ -49,6 +49,12 @@ cmdl_parser.add_argument('-mask', metavar="mask.mrc", type=str, required=False,
 def main():
 	start = time.time();
 
+
+        print('***************************************************');
+        print('******* Significance analysis of FSC curves *******');
+        print('***************************************************');
+
+
 	# get command line input
 	args = cmdl_parser.parse_args();
 
@@ -59,7 +65,7 @@ def main():
 
 
 	halfMap1Data = np.copy(halfMap1.data);
-	halfMap2Data = np.copy(halfMap1.data);
+	halfMap2Data = np.copy(halfMap2.data);
 
 
 	#set pixel size
@@ -144,8 +150,10 @@ def main():
 
 	end = time.time();
 	totalRuntime = end - start;
-
+	
+	print("****** Summary ******");
 	print("Runtime: %.2f" %totalRuntime);
+
 
 if (__name__ == "__main__"):
 	main()

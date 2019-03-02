@@ -419,7 +419,7 @@ def pAdjust(pValues, method):
 
 	numPVal = len(pValues);
 
-	print("Sorting p-values ...")
+	#print("Sorting p-values ...")
 	pSortInd = np.argsort(pValues);
 	pSort = pValues[pSortInd];
 	
@@ -429,7 +429,7 @@ def pAdjust(pValues, method):
 	#use expansion for harmonic series
 	Hn = math.log(numPVal) + 0.5772 + 0.5/numPVal - 1.0/(12*numPVal**2) + 1.0/(120*numPVal**4);    
 
-	print("Adjusting p-values ...");
+	#print("Adjusting p-values ...");
 	if method =='BH': #do benjamini-hochberg procedure
 		for i in range(numPVal-1, -1, -1):
 			pAdjust[i] = min(prevPVal, pSort[i]*numPVal/(i+1.0));

@@ -1,6 +1,6 @@
 import numpy as np
+from confidenceMapUtil import FDRutil 
 import matplotlib.pyplot as plt
-from FDRthresholding_localFDR import FDRutil, mapUtil
 import math
 
 #-----------------------------------------------------
@@ -156,7 +156,6 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 			pVals[1] = 1.0;
 		else:
 			pVals[1] = 0.0;
-	#print(FSC);
 
 	# do FDR control of p-Values
 	qVals_FDR = FDRutil.pAdjust(pVals, 'BH');
@@ -171,12 +170,12 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 		resolution = np.min(np.argwhere(tmpFSC))-1;
 
 		if resolution < 0:
-			resolution = 0.0;
+			resolution = 100.0;
 
-		if res[resolution] == 0.0:
-			resolution = 0.0;
+		if res[int(resolution)] == 0.0:
+			resolution = 100.0;
 		else:
-			tmpFreq = res[resolution] #+ (res[resolution+1] - res[resolution])/2.0;
+			tmpFreq = res[int(resolution)] #+ (res[resolution+1] - res[resolution])/2.0;
 			resolution = float(1.0/tmpFreq);
 	except:
 		resolution = 2.0*apix;
@@ -189,12 +188,12 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 		resolution_FDR = np.min(np.argwhere(threshQVals)) - 1;
 
 		if resolution_FDR < 0:
-			resolution_FDR = 0.0;
+			resolution_FDR = 100.0;
 
-		if res[resolution_FDR] == 0.0:
-			resolution_FDR = 0.0;
+		if res[int(resolution_FDR)] == 0.0:
+			resolution_FDR = 100.0;
 		else:
-			tmpFreq = res[resolution_FDR] #+ (res[resolution_FDR + 1] - res[resolution_FDR]) / 2.0;
+			tmpFreq = res[int(resolution_FDR)] #+ (res[resolution_FDR + 1] - res[resolution_FDR]) / 2.0;
 			resolution_FDR = float(1.0/tmpFreq);
 	except:
 		resolution_FDR = 2.0*apix;
@@ -207,12 +206,12 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 		resolution_FWER = np.min(np.argwhere(threshQVals)) - 1;
 
 		if resolution_FWER < 0:
-			resolution_FWER = 0.0;
+			resolution_FWER = 100.0;
 
-		if res[resolution_FWER] == 0.0:
-			resolution_FWER = 0.0;
+		if res[int(resolution_FWER)] == 0.0:
+			resolution_FWER = 100.0;
 		else:
-			tmpFreq = res[resolution_FWER] #+ (res[resolution_FDR + 1] - res[resolution_FDR]) / 2.0;
+			tmpFreq = res[int(resolution_FWER)] #+ (res[resolution_FDR + 1] - res[resolution_FDR]) / 2.0;
 			resolution_FWER = float(1.0/tmpFreq);
 	except:
 		resolution_FWER = 2.0*apix;
@@ -240,7 +239,7 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 		print('Resolution at 1 % FWER: ' + repr(round(resolution_FWER, 2)) + ' Angstrom');
 		print('Resolution at 3 Sigma: ' + repr(round(resolution_3Sigma, 2)) + ' Angstrom');
 
-	return res, FSC, percentCutoffs, threeSigma, threeSigmaCorr, resolution, tmpPermutedCorCoeffs;
+	return res, FSC, percentCutoffs, threeSigma, threeSigmaCorr, resolution_FDR, tmpPermutedCorCoeffs;
 
 #--------------------------------------------------------
 def correlationCoefficient(sample1, sample2):
@@ -332,14 +331,14 @@ def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
 	tenPercentCutoff = permutedCorCoeffs[int(numPermutations - math.floor(numPermutations * 0.10)) - 1];
 	percentCutoffs = np.array((tenPercentCutoff, fivePercentCutoff, onePercentCutoff, _onePercentCutoff));
 	percentCutoffs[percentCutoffs<=0] = 1.0;
-
-	if maxSamples < 5.0:
-		#print('hurz');
+	
+	if maxSamples < 7.0:
 		#pValue = 0.0;
-		#if trueFSC < 0.5:
-		#	pValue = 1.0;
-		#else:
-		#	pValue = 0.0;
+		#print("hurz")
+		if trueFSC < 0.9:
+			pValue = 1.0;
+		else:
+			pValue = 0.0;
 		percentCutoffs = np.ones(percentCutoffs.shape);
 
 	return pValue, percentCutoffs, threeSigma, threeSigmaCorr, permutedCorCoeffs;
@@ -389,6 +388,8 @@ def getMaskCoeff(mask):
 #-------------------------------------------------------
 def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsymUnits, mask):
 
+	print("Starting calculations of local resolutions ...");
+
 	sizeMap = halfMap1.shape;
 	localRes = np.zeros(sizeMap);
 	resVector = np.fft.fftfreq(boxSize, apix);
@@ -414,8 +415,6 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 	print("Total number of calculations: " + repr(numCalculations));
 
 	#calc local Resolutions
-	calcInd = 0;
-
 	#****************************************************
 	#get initial permuted CorCoeffs
 	print("Do initial permuations ...");
@@ -454,6 +453,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 
 
 	print("Do local FSC calculations ...");
+	calcInd = 0;
 	iInd = 0;
 	jInd = 0;
 	kInd = 0;
@@ -478,13 +478,18 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 					locRes[iInd, jInd, kInd] = tmpRes;
 				else:
 					paddedLocalRes[i - halfStepSize: i - halfStepSize + stepSize, j - halfStepSize: j - halfStepSize + stepSize, k - halfStepSize: k - halfStepSize + stepSize] = 0.0;
-					locRes[iInd, jInd, kInd] = 0.0;
+					locRes[iInd, jInd, kInd] = 100.0;
 
 				calcInd = calcInd + 1;
 				kInd = kInd + 1;
+				
+				#print output
+				progress = calcInd/float(numCalculations);
+                		if calcInd%(int(numCalculations/20.0)) == 0:
+                        		output = "%.1f" %(progress*100) + "% finished ..." ;
+                        		print(output);
 
 			jInd = jInd + 1;
-			print("Completed " + repr(round(calcInd/float(numCalculations)*100.0, 2)) + "%");
 		iInd = iInd + 1;
 
 	#crop the local resolutions
@@ -515,7 +520,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 	#if zoomFactor != 0.0:
 	#	localRes = ndimage.zoom(tmpLocRes, zoomFactor, order=1);
 
-	localRes[mask <= 0.1] = 0.0;
+	localRes[mask <= 0.1] = 100.0;
 
 	return localRes;
 
@@ -601,7 +606,7 @@ def simulatedVolumes(maskData, numAsymUnits):
 
 	#plot percent cutoffs
 	for i in range(percentCutoffs.shape[1]):
-		plt.semilogy(res[0:], percentCutoffs[0:, i], linewidth = 0.5, color = 'g');
+		plt.semilogy(res[0:], percentCutoffs[0:, i], linewidth = 0.5, color = 'r');
 
 	plt.savefig("simulation_noiseVolumes_hannWindow.pdf", dpi=600);
 	plt.close();
@@ -636,9 +641,9 @@ def comparisonSignalWithNoise(maskData, numAsymUnits):
 		plt.semilogy(res[0:], percentCutoffs[0:, i], linewidth = 0.5, color = 'b');
 
 	for i in range(percentCutoffs.shape[1]):
-		plt.semilogy(res[0:], percentCutoffs_withS[0:, i], linewidth = 0.5, color = 'g');
+		plt.semilogy(res[0:], percentCutoffs_withS[0:, i], linewidth = 0.5, color = 'r');
 
-	plt.semilogy(res[0:], threeSigmaCorr[0:], color='m', linewidth=0.5);
+	#plt.semilogy(res[0:], threeSigmaCorr[0:], color='m', linewidth=0.5);
 
 	plt.savefig("noise+signal_snr0122.pdf", dpi=300);
 	plt.close();
