@@ -131,6 +131,11 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 	threeSigmaCorr = np.zeros((res.shape[0]));
 	tmpPermutedCorCoeffs = [];
 
+	numCalculations = res.shape[0];
+
+	if verbose:
+		print("Run permutation test of each resolution shell ...");
+
 	for i in xrange(res.shape[0]):
 		tmpRes = res[i];
 		resShell_half1 = fft_half1[((tmpRes - resSpacing) < freqMap) & (freqMap < (tmpRes + resSpacing))];
@@ -146,12 +151,22 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 			pVals[i], percentCutoffs[i,:], threeSigma[i], threeSigmaCorr[i], corCoeffs = permutationTest(resShell_half1, resShell_half2, numAsymUnits, maskCoeff);
 			tmpPermutedCorCoeffs.append(corCoeffs);
 
-	if FSC[0] < 0.9:
-		pVals[0] = 1.0;
-	else:
-		pVals[0] = 0.0;
+		if verbose:
+			#print output
+			progress = i/float(numCalculations);
+			if i%(int(numCalculations/20.0)) == 0:
+				output = "%.1f" %(progress*100) + "% finished ..." ;
+				print(output);
+		
+
+	pVals[0] = 0.0;
 
 	if localRes:
+		if FSC[0] < 0.9:
+                	pVals[0] = 1.0;
+        	else:
+                	pVals[0] = 0.0;
+		
 		if FSC[1] < 0.9:
 			pVals[1] = 1.0;
 		else:
@@ -165,62 +180,57 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 	tmpFSC[tmpFSC > cutoff] = 1.0;
 	tmpFSC[tmpFSC <= cutoff] = 0.0;
 	tmpFSC = 1.0 - tmpFSC;
+	tmpFSC[0] = 0.0;	
 
 	try:
 		resolution = np.min(np.argwhere(tmpFSC))-1;
 
 		if resolution < 0:
 			resolution = 100.0;
-
-		if res[int(resolution)] == 0.0:
-			resolution = 100.0;
 		else:
-			tmpFreq = res[int(resolution)] #+ (res[resolution+1] - res[resolution])/2.0;
-			resolution = float(1.0/tmpFreq);
+			if res[int(resolution)] == 0.0:
+				resolution = 100.0;
+			else:
+				tmpFreq = res[int(resolution)] #+ (res[resolution+1] - res[resolution])/2.0;
+				resolution = float(1.0/tmpFreq);
 	except:
 		resolution = 2.0*apix;
 
 	threshQVals = np.copy(qVals_FDR);
 	threshQVals[threshQVals <= 0.01] = 0.0; #signal
-	#threshQVals[threshQVals > 0.01] = 1.0 #no signal
+	threshQVals[threshQVals > 0.01] = 1.0 #no signal
 
 	try:
 		resolution_FDR = np.min(np.argwhere(threshQVals)) - 1;
 
 		if resolution_FDR < 0:
 			resolution_FDR = 100.0;
-
-		if res[int(resolution_FDR)] == 0.0:
-			resolution_FDR = 100.0;
 		else:
-			tmpFreq = res[int(resolution_FDR)] #+ (res[resolution_FDR + 1] - res[resolution_FDR]) / 2.0;
-			resolution_FDR = float(1.0/tmpFreq);
+			if res[int(resolution_FDR)] == 0.0:
+				resolution_FDR = 100.0;
+			else:
+				tmpFreq = res[int(resolution_FDR)] #+ (res[resolution_FDR + 1] - res[resolution_FDR]) / 2.0;
+				resolution_FDR = float(1.0/tmpFreq);
 	except:
 		resolution_FDR = 2.0*apix;
 
 	threshQVals = np.copy(qVals_FWER);
 	threshQVals[threshQVals <= 0.01] = 0.0; #signal
-	#threshQVals[threshQVals > 0.01] = 1.0 #no signal
+	threshQVals[threshQVals > 0.01] = 1.0 #no signal
 
 	try:
 		resolution_FWER = np.min(np.argwhere(threshQVals)) - 1;
 
 		if resolution_FWER < 0:
 			resolution_FWER = 100.0;
-
-		if res[int(resolution_FWER)] == 0.0:
-			resolution_FWER = 100.0;
 		else:
-			tmpFreq = res[int(resolution_FWER)] #+ (res[resolution_FDR + 1] - res[resolution_FDR]) / 2.0;
-			resolution_FWER = float(1.0/tmpFreq);
+			if res[int(resolution_FWER)] == 0.0:
+				resolution_FWER = 100.0;
+			else:
+				tmpFreq = res[int(resolution_FWER)] #+ (res[resolution_FDR + 1] - res[resolution_FDR]) / 2.0;
+				resolution_FWER = float(1.0/tmpFreq);
 	except:
 		resolution_FWER = 2.0*apix;
-
-	#if resolution_FDR < 5.0:
-	#	writeFSC(res, FSC, percentCutoffs, threeSigma);
-
-	#print("Resolution at 1percent FDR: %.2f" %resolution_FDR);
-	#print("Res: %.2f" %resolution);
 
 	# get 3 sigma threshold
 	resolution_3Sigma = 0.0;
@@ -237,7 +247,7 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 		print('Resolution at ' + repr(cutoff) + ' FSC threshold: ' + repr(round(resolution, 2)));
 		print('Resolution at 1 % FDR: ' + repr(round(resolution_FDR, 2)) + ' Angstrom');
 		print('Resolution at 1 % FWER: ' + repr(round(resolution_FWER, 2)) + ' Angstrom');
-		print('Resolution at 3 Sigma: ' + repr(round(resolution_3Sigma, 2)) + ' Angstrom');
+		#print('Resolution at 3 Sigma: ' + repr(round(resolution_3Sigma, 2)) + ' Angstrom');
 
 	return res, FSC, percentCutoffs, threeSigma, threeSigmaCorr, resolution_FDR, tmpPermutedCorCoeffs;
 
