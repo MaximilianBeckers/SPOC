@@ -121,7 +121,7 @@ def main():
 		mask = mrcfile.open(args.mask, mode='r');
 		maskData = np.copy(mask.data);
 	else:
-		print("Using a cricular mask ...");
+		print("Using a circular mask ...");
 		maskData = FSCutil.makeCircularMask(halfMap1Data, (np.min(halfMap1Data.shape) / 2.0) - 4.0);
 
 
