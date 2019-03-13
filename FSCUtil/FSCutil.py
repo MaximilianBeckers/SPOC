@@ -199,6 +199,7 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 	threshQVals = np.copy(qVals_FDR);
 	threshQVals[threshQVals <= 0.01] = 0.0; #signal
 	threshQVals[threshQVals > 0.01] = 1.0 #no signal
+	threshQValsFDR = threshQVals;
 
 	try:
 		resolution_FDR = np.min(np.argwhere(threshQVals)) - 1;
@@ -249,7 +250,7 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 		print('Resolution at 1 % FWER: ' + repr(round(resolution_FWER, 2)) + ' Angstrom');
 		#print('Resolution at 3 Sigma: ' + repr(round(resolution_3Sigma, 2)) + ' Angstrom');
 
-	return res, FSC, percentCutoffs, threeSigma, threeSigmaCorr, resolution_FDR, tmpPermutedCorCoeffs;
+	return res, FSC, percentCutoffs, qVals_FWER, qVals_FDR, resolution_FDR, tmpPermutedCorCoeffs;
 
 #--------------------------------------------------------
 def correlationCoefficient(sample1, sample2):
@@ -286,6 +287,9 @@ def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
 	numPermutations = np.min((math.factorial(numSamples), 1000));
 	permutedCorCoeffs = np.zeros(numPermutations);
 	corrCoeff = np.zeros(numPermutations);
+
+	#set random seed
+	np.random.seed(3);
 
 	if numSamples > maxSamples:  # do subsampling
 		randomIndices = np.random.choice(range(numSamples), maxSamples, replace=False);
@@ -362,18 +366,27 @@ def permute_columns(x):
 	return x[ix_i, ix_j];
 
 #--------------------------------------------------------
-def writeFSC(resolutions, FSC, percentCutoffs, threeSigma):
+def writeFSC(resolutions, FSC, percentCutoffs, qValuesFWER, qValuesFDR):
 
-	plt.plot(resolutions, FSC);
+	plt.plot(resolutions, FSC, label="FSC", linewidth=1.5);
 
 	#plot percent cutoffs
-	for i in range(percentCutoffs.shape[1]):
-		plt.plot(resolutions[0:], percentCutoffs[0:, i], linewidth = 0.3, color='g');
+	#for i in range(percentCutoffs.shape[1]):
+		#plt.plot(resolutions[0:], percentCutoffs[0:, i], linewidth = 0.5, color='g');
 
-	plt.plot(resolutions[0:], threeSigma[0:], color = 'm', linewidth=0.5);
+	#threshold the adjusted pValues
+	qValuesFDR[qValuesFDR<=0.01] = 0.0;
+	qValuesFWER[qValuesFWER<=0.01] = 0.0;
+
+	plt.plot(resolutions[0:][qValuesFDR==0.0], qValuesFDR[qValuesFDR==0.0]-0.05, 'xb', label="sign. at 1% FDR");
+	plt.plot(resolutions[0:][qValuesFWER==0.0], qValuesFWER[qValuesFWER==0.0]-0.1, 'xm', label="sign. at 1% FWER");
 	plt.axhline(0.5, linewidth = 0.5, color = 'r');
 	plt.axhline(0.143, linewidth = 0.5, color = 'r');
 	plt.axhline(0.0, linewidth = 0.5, color = 'b');
+	
+	plt.xlabel("1/resolution [1/A]");
+	plt.ylabel("FSC");
+	plt.legend();
 
 	plt.savefig('FSC.png', dpi=300);
 	plt.close();

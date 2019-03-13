@@ -170,4 +170,4 @@ def calculateConfidenceMap(em_map, apix, noiseBox, testProc, ecdf, lowPassFilter
 	# apply lowpass-filtered mask to maps
 	confidenceMap = np.multiply(confidenceMap, circularMaskData);
 
-	return confidenceMap, locFiltMap, locScaleMap, binMap, maskedMap;
+	return confidenceMap, locFiltMap, locScaleMap, binMap, maskedMap, mean, var;

@@ -128,11 +128,11 @@ def main():
 	#-------------------------------------------
 	#---------- no local Resolutions -----------
 	if not args.localResolutions:
-		res, FSC, percentCutoffs, threeSigma, threeSigmaCorr, resolution, _ = FSCutil.FSC(halfMap1Data, halfMap2Data,
+		res, FSC, percentCutoffs, qValsFWER, qValsFDR, resolution, _ = FSCutil.FSC(halfMap1Data, halfMap2Data,
 																					  maskData, apix, 0.143,
 																					  numAsymUnits, False, True, None);
 		# write the FSC
-		FSCutil.writeFSC(res, FSC, percentCutoffs, threeSigmaCorr);
+		FSCutil.writeFSC(res, FSC, percentCutoffs, qValsFWER, qValsFDR);
 	#-------------------------------------------
 	#--------- calc local Resolutions ----------
 	else:

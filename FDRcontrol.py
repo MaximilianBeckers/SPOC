@@ -163,7 +163,7 @@ def main():
 			return;
 
 	#run the actual analysis
-	confidenceMap, locFiltMap, locScaleMap, binMap, maskedMap = confidenceMapMain.calculateConfidenceMap(mapData, apix, args.noiseBox, args.testProc, args.ecdf, args.lowPassFilter, args.method, args.window_size, locResMapData, meanMapData, varMapData, args.fdr, modelMapData, stepSize, windowSizeLocScale, mpi);
+	confidenceMap, locFiltMap, locScaleMap, binMap, maskedMap, mean, var = confidenceMapMain.calculateConfidenceMap(mapData, apix, args.noiseBox, args.testProc, args.ecdf, args.lowPassFilter, args.method, args.window_size, locResMapData, meanMapData, varMapData, args.fdr, modelMapData, stepSize, windowSizeLocScale, mpi);
 			
 	if locFiltMap is not None:
 		locFiltMapMRC = mrcfile.new(splitFilename[0] + '_locFilt.mrc', overwrite=True);
@@ -192,6 +192,20 @@ def main():
 		locScaleMapMRC.set_data(locScaleMap);
 		locScaleMapMRC.voxel_size = apix;
 		locScaleMapMRC.close();
+
+	if (locScaleMap is not None) | (locFiltMap is not None):
+		meanMapMRC = mrcfile.new(splitFilename[0] + '_mean.mrc', overwrite=True);
+                mean = np.float32(mean);
+                meanMapMRC.set_data(mean);
+                meanMapMRC.voxel_size = apix;
+                meanMapMRC.close();
+
+		varMapMRC = mrcfile.new(splitFilename[0] + '_var.mrc', overwrite=True);
+                var = np.float32(var);
+                varMapMRC.set_data(var);
+                varMapMRC.voxel_size = apix;
+                varMapMRC.close();
+
 
 	#write the confidence Maps
 	confidenceMapMRC = mrcfile.new(splitFilename[0] + '_confidenceMap.mrc', overwrite=True);
