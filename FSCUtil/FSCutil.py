@@ -432,6 +432,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 	halfBoxSize = int(boxSize/2.0);
 	halfStepSize = int(stepSize/2.0);
 
+	#make Hann window
 	hannWindow = makeHannWindow(np.zeros((boxSize, boxSize, boxSize)));
 
 	numCalculations = len(range(boxSize, boxSize + sizeMap[0], stepSize)) * len(range(boxSize, boxSize + sizeMap[1], stepSize)) * len(range(boxSize, boxSize + sizeMap[0], stepSize));
@@ -529,7 +530,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 	y = np.linspace(1, 10, locRes.shape[1]);
 	z = np.linspace(1, 10, locRes.shape[2]);
 
-	my_interpolating_function = RegularGridInterpolator((x, y, z), locRes, method='linear')
+	my_interpolating_function = RegularGridInterpolator((x, y, z), locRes, method='nearest')
 
 	xNew = np.linspace(1, 10, sizeMap[0]);
 	yNew = np.linspace(1, 10, sizeMap[1]);
