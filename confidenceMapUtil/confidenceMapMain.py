@@ -123,10 +123,16 @@ def calculateConfidenceMap(em_map, apix, noiseBox, testProc, ecdf, lowPassFilter
 	else:
 		qMapFWER = FDRutil.calcQMap(em_map, mean, var, ECDF, wn, boxCoord, circularMaskData, 'Holm', testProc);
 
+
 	if ((method == 'Holm') | (method=='Hochberg')):
 		qMap = qMapFWER;
 	else:
 		qMap = qMapFDR;
+
+	if locFiltMap is not None:
+		em_map = locFiltMap;
+	if locScaleMap is not None:
+		em_map = locScaleMap;
 		
 	# threshold the qMap
 	fdr = 0.01;
