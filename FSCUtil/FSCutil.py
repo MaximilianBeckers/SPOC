@@ -395,7 +395,7 @@ def roundMapToVectorElements(map, apix):
 	
 	sizeMap = map.shape;
 	res = np.fft.rfftfreq(sizeMap[0], 1.0);
-        res = res/float(apix);
+	res = res/float(apix);
 
 	numRes = res.size;
 	resSpacing = (res[1] - res[0])/2.0;
