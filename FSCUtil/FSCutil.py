@@ -163,9 +163,9 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 
 	if localRes:
 		if FSC[0] < 0.9:
-                	pVals[0] = 1.0;
-        	else:
-                	pVals[0] = 0.0;
+		pVals[0] = 1.0;
+	else:
+		pVals[0] = 0.0;
 		
 		if FSC[1] < 0.9:
 			pVals[1] = 1.0;
