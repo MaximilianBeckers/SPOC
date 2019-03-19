@@ -536,9 +536,9 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 				
 				#print output
 				progress = calcInd/float(numCalculations);
-                		if calcInd%(int(numCalculations/20.0)) == 0:
-                        		output = "%.1f" %(progress*100) + "% finished ..." ;
-                        		print(output);
+				if calcInd%(int(numCalculations/20.0)) == 0:
+					output = "%.1f" %(progress*100) + "% finished ..." ;
+					print(output);
 
 			jInd = jInd + 1;
 		iInd = iInd + 1;
