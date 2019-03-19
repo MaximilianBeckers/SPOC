@@ -186,10 +186,10 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 		resolution = np.min(np.argwhere(tmpFSC))-1;
 
 		if resolution < 0:
-			resolution = 100.0;
+			resolution = 0.0;
 		else:
 			if res[int(resolution)] == 0.0:
-				resolution = 100.0;
+				resolution = 0.0;
 			else:
 				tmpFreq = res[int(resolution)] #+ (res[resolution+1] - res[resolution])/2.0;
 				resolution = float(1.0/tmpFreq);
@@ -205,10 +205,10 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 		resolution_FDR = np.min(np.argwhere(threshQVals)) - 1;
 
 		if resolution_FDR < 0:
-			resolution_FDR = 100.0;
+			resolution_FDR = 0.0;
 		else:
 			if res[int(resolution_FDR)] == 0.0:
-				resolution_FDR = 100.0;
+				resolution_FDR = 0.0;
 			else:
 				tmpFreq = res[int(resolution_FDR)] #+ (res[resolution_FDR + 1] - res[resolution_FDR]) / 2.0;
 				resolution_FDR = float(1.0/tmpFreq);
@@ -223,10 +223,10 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 		resolution_FWER = np.min(np.argwhere(threshQVals)) - 1;
 
 		if resolution_FWER < 0:
-			resolution_FWER = 100.0;
+			resolution_FWER = 0.0;
 		else:
 			if res[int(resolution_FWER)] == 0.0:
-				resolution_FWER = 100.0;
+				resolution_FWER = 0.0;
 			else:
 				tmpFreq = res[int(resolution_FWER)] #+ (res[resolution_FDR + 1] - res[resolution_FDR]) / 2.0;
 				resolution_FWER = float(1.0/tmpFreq);
@@ -234,21 +234,20 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 		resolution_FWER = 2.0*apix;
 
 	# get 3 sigma threshold
-	resolution_3Sigma = 0.0;
-	for i in range(FSC.shape[0]):
-		if FSC[i] < threeSigmaCorr[i]:
-			if threeSigmaCorr[i] == 1.0:
-				continue;
-
-			tmpFreq = res[i-1] #+ (res[i] - res[i-1])/2.0;
-			resolution_3Sigma = float(1.0/tmpFreq);
-			break;
+	#resolution_3Sigma = 0.0;
+	#for i in range(FSC.shape[0]):
+	#	if FSC[i] < threeSigmaCorr[i]:
+	#		if threeSigmaCorr[i] == 1.0:
+	#			continue;
+	#
+	#		tmpFreq = res[i-1] #+ (res[i] - res[i-1])/2.0;
+	#		resolution_3Sigma = float(1.0/tmpFreq);
+	#		break;
 
 	if verbose:
 		print('Resolution at ' + repr(cutoff) + ' FSC threshold: ' + repr(round(resolution, 2)));
 		print('Resolution at 1 % FDR: ' + repr(round(resolution_FDR, 2)) + ' Angstrom');
 		print('Resolution at 1 % FWER: ' + repr(round(resolution_FWER, 2)) + ' Angstrom');
-		#print('Resolution at 3 Sigma: ' + repr(round(resolution_3Sigma, 2)) + ' Angstrom');
 
 	return res, FSC, percentCutoffs, qVals_FWER, qVals_FDR, resolution_FDR, tmpPermutedCorCoeffs;
 
@@ -392,6 +391,34 @@ def writeFSC(resolutions, FSC, percentCutoffs, qValuesFWER, qValuesFDR):
 	plt.close();
 
 #-------------------------------------------------------
+def roundMapToVectorElements(map, apix): 
+	
+	sizeMap = map.shape;
+	res = np.fft.rfftfreq(sizeMap[0], 1.0);
+        res = res/float(apix);
+
+	numRes = res.size;
+	resSpacing = (res[1] - res[0])/2.0;
+	
+	for i in range(numRes):
+	
+		#get lower and upper bounds
+		upper = 1.0/(res[i] - resSpacing);
+		lower = 1.0/(res[i] + resSpacing);
+
+		if i==0 :
+			map[map>lower] = 100;
+		
+		elif i==(numRes-1):
+			map[map<=upper] = 1.0/(res[i]);
+		
+		else: 
+			map[(map>lower) & (map<=upper)] = 1.0/(res[i]);
+		
+	return map
+
+
+#-------------------------------------------------------
 def getMaskCoeff(mask):
 
 	sizeMap = np.array(mask.shape);
@@ -416,7 +443,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 	sizeMap = halfMap1.shape;
 	localRes = np.zeros(sizeMap);
 	resVector = np.fft.fftfreq(boxSize, apix);
-	locRes = np.ones((len(range(boxSize, boxSize + sizeMap[0], stepSize)),len(range(boxSize, boxSize + sizeMap[1], stepSize)), len(range(boxSize, boxSize + sizeMap[2], stepSize))))*100.0;
+	locRes = np.ones((len(range(boxSize, boxSize + sizeMap[0], stepSize)),len(range(boxSize, boxSize + sizeMap[1], stepSize)), len(range(boxSize, boxSize + sizeMap[2], stepSize))))*0.0;
 
 	#pad the volumes
 	paddedHalfMap1 = np.zeros((sizeMap[0] + 2*boxSize, sizeMap[1] + 2*boxSize, sizeMap[2] + 2*boxSize));
@@ -463,7 +490,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 		window_halfmap1 = window_halfmap1 * hannWindow;
 		window_halfmap2 = window_halfmap2 * hannWindow;
 
-		_, _, _, _, _, _ , tmpPermutedCorCoeffs = FSC(window_halfmap1, window_halfmap2, None, apix, cutoff, numAsymUnits, True, False, None);
+		res, _, _, _, _, _ , tmpPermutedCorCoeffs = FSC(window_halfmap1, window_halfmap2, None, apix, cutoff, numAsymUnits, True, False, None);
 
 		if i == 0:
 			#initialize the array of correlation coefficients
@@ -487,7 +514,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 			kInd = 0;
 			for k in xrange(boxSize, boxSize + sizeMap[2], stepSize):
 
-				if paddedMask[i, j, k] > 0.1:
+				if paddedMask[i, j, k] > 0.99:
 					window_halfmap1 = paddedHalfMap1[i - halfBoxSize: i - halfBoxSize + boxSize, j - halfBoxSize: j - halfBoxSize + boxSize, k - halfBoxSize: k - halfBoxSize + boxSize];
 					window_halfmap2 = paddedHalfMap2[i - halfBoxSize: i - halfBoxSize + boxSize, j - halfBoxSize: j - halfBoxSize + boxSize, k - halfBoxSize: k - halfBoxSize + boxSize];
 
@@ -502,7 +529,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 					locRes[iInd, jInd, kInd] = tmpRes;
 				else:
 					paddedLocalRes[i - halfStepSize: i - halfStepSize + stepSize, j - halfStepSize: j - halfStepSize + stepSize, k - halfStepSize: k - halfStepSize + stepSize] = 0.0;
-					locRes[iInd, jInd, kInd] = 100.0;
+					locRes[iInd, jInd, kInd] = 0.0;
 
 				calcInd = calcInd + 1;
 				kInd = kInd + 1;
@@ -516,21 +543,13 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 			jInd = jInd + 1;
 		iInd = iInd + 1;
 
-	#crop the local resolutions
-	#localRes = paddedLocalRes[boxSize: boxSize + sizeMap[0], boxSize: boxSize + sizeMap[1], boxSize: boxSize + sizeMap[2]];
-
-	#get mean res
-	#meanRes = np.mean(locRes[locRes != 100.0]);
-	#tmpLocRes = np.copy(locRes);
-	#tmpLocRes[tmpLocRes == 100.0] = meanRes;
-	#print(meanRes);
 
 	from scipy.interpolate import RegularGridInterpolator
 	x = np.linspace(1, 10, locRes.shape[0]);
 	y = np.linspace(1, 10, locRes.shape[1]);
 	z = np.linspace(1, 10, locRes.shape[2]);
 
-	my_interpolating_function = RegularGridInterpolator((x, y, z), locRes, method='nearest')
+	my_interpolating_function = RegularGridInterpolator((x, y, z), locRes, method='linear')
 
 	xNew = np.linspace(1, 10, sizeMap[0]);
 	yNew = np.linspace(1, 10, sizeMap[1]);
@@ -544,7 +563,11 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 	#if zoomFactor != 0.0:
 	#	localRes = ndimage.zoom(tmpLocRes, zoomFactor, order=1);
 
-	localRes[mask <= 0.1] = 100.0;
+	#localRes = roundMapToVectorElements(localRes, apix); 
+
+	localRes[mask <= 0.99] = 0.0;
+	#localRes[localRes > 50.0] = 100.0;
+
 
 	return localRes;
 
