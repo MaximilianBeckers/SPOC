@@ -50,9 +50,9 @@ def main():
 	start = time.time();
 
 
-        print('***************************************************');
-        print('******* Significance analysis of FSC curves *******');
-        print('***************************************************');
+	print('***************************************************');
+	print('******* Significance analysis of FSC curves *******');
+	print('***************************************************');
 
 
 	# get command line input
