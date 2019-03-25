@@ -136,7 +136,7 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 	if verbose:
 		print("Run permutation test of each resolution shell ...");
 
-	for i in xrange(res.shape[0]):
+	for i in range(res.shape[0]):
 		tmpRes = res[i];
 		resShell_half1 = fft_half1[((tmpRes - resSpacing) < freqMap) & (freqMap < (tmpRes + resSpacing))];
 		resShell_half2 = fft_half2[((tmpRes - resSpacing) < freqMap) & (freqMap < (tmpRes + resSpacing))];
@@ -280,7 +280,7 @@ def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
 	#numSamplesThreeSigmaCorr = np.min((np.max((numSamples/float(numAsymUnits)*maskCoeff, 1.0)), 200000));
 	numSamplesThreeSigmaCorr = int(numSamplesThreeSigmaCorr);
 
-	#get real value
+	#get real FSC value
 	trueFSC = correlationCoefficient(sample1, sample2);
 
 	numPermutations = np.min((math.factorial(numSamples), 1000));
@@ -301,22 +301,42 @@ def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
 
 	tmpFSCdenominator = np.sqrt(np.sum(2.0 * np.square(np.absolute(tmpSample1))) * 2.0 * np.sum(np.square(np.absolute(tmpSample2))));
 	tmpSample1ComplexConj = np.conj(tmpSample1);
-
-	for i in xrange(numPermutations):
-
-		#if numSamples <= 5:
-		#	randomIndices = np.random.choice(range(sample2.shape[0]), maxSamples, replace=False);
-		#	tmpSample1 = np.copy(sample1[randomIndices]);
-		#	tmpSample2 = np.copy(sample2[randomIndices]);
-		#	tmpFSCdenominator = np.sqrt(np.sum(2.0 * np.square(np.absolute(tmpSample1))) * 2.0 * np.sum(np.square(np.absolute(tmpSample2))));
+	tmpSample1 = 0; #free memory
+	
+	prevPValue = 0.0;
+	for i in range(numPermutations):
 
 		permutedSample2 = np.random.permutation(tmpSample2);
-		tmpCorCoeff = (np.sum((tmpSample1 * np.conj(permutedSample2)) + (tmpSample1ComplexConj * permutedSample2)));
+		#tmpCorCoeff = (np.sum((tmpSample1 * np.conj(permutedSample2)) + (tmpSample1ComplexConj * permutedSample2)));
+		
+		summand = tmpSample1ComplexConj * permutedSample2;
+		tmpCorCoeff = np.sum(np.conj(summand) + summand);
+
 		permutedCorCoeffs[i] = np.real(tmpCorCoeff);
+
+		pValueCheckInterval = 100;
+		if (i%pValueCheckInterval == 0) & (i>0):
+			#calculate temporary p-value
+			tmpPermutedCorCoeffs = np.real(permutedCorCoeffs[(i-pValueCheckInterval):i])/np.real(tmpFSCdenominator);		
+		
+			#calculate the pValue
+			extremeCorCoeff = tmpPermutedCorCoeffs[tmpPermutedCorCoeffs>trueFSC];
+			numExtreme = extremeCorCoeff.shape[0];
+			newPValue = numExtreme/float(pValueCheckInterval);
+			
+			#if p-value accuracy is high enough, stop permutations
+			if (newPValue - prevPValue) < 0.01:
+				permutedCorCoeffs = permutedCorCoeffs[:(i+1)];
+				numPermutations = i + 1;
+				break;	
+
+			prevPValue = newPValue;		
+		
 
 	permutedCorCoeffs = np.real(permutedCorCoeffs)/np.real(tmpFSCdenominator);
 
 	"""#permutation sample
+	start = time.time();	
 	permutationsSample2 = np.tile(tmpSample2, (numPermutations, 1)).T;
 	permutationsSample2 = permute_columns(permutationsSample2);
 	summand1 = tmpSample1 * np.conj(permutationsSample2.T);
@@ -325,8 +345,11 @@ def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
 	tmpCorCoeff = np.real(np.sum(summand1 + summand2, 1));
 	summand1 = 0.0;
 	summand2 = 0.0
-	permutedCorCoeffs = tmpCorCoeff/tmpFSCdenominator;"""
-
+	permutedCorCoeffs = tmpCorCoeff/tmpFSCdenominator;
+	end = time.time();
+	print(end-start);
+	"""
+	
 	#calculate the pValue
 	extremeCorCoeff = permutedCorCoeffs[permutedCorCoeffs>trueFSC];
 	numExtreme = extremeCorCoeff.shape[0];
@@ -344,10 +367,9 @@ def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
 	tenPercentCutoff = permutedCorCoeffs[int(numPermutations - math.floor(numPermutations * 0.10)) - 1];
 	percentCutoffs = np.array((tenPercentCutoff, fivePercentCutoff, onePercentCutoff, _onePercentCutoff));
 	percentCutoffs[percentCutoffs<=0] = 1.0;
-	
+
+	#if sample size of FSC values is low, use a 0.9 FSC threshold	
 	if maxSamples < 7.0:
-		#pValue = 0.0;
-		#print("hurz")
 		if trueFSC < 0.9:
 			pValue = 1.0;
 		else:
@@ -417,24 +439,6 @@ def roundMapToVectorElements(map, apix):
 		
 	return map
 
-
-#-------------------------------------------------------
-def getMaskCoeff(mask):
-
-	sizeMap = np.array(mask.shape);
-	center = sizeMap/2.0;
-	nonZeroElements = np.argwhere(mask == 1.0);
-	vectors = nonZeroElements - center;
-
-	radius = np.sqrt(vectors[:,0]**2 + vectors[:,1]**2 + vectors[:,2]**2);
-	radiusBall = np.max(radius);
-	radiusBall = np.min((radiusBall, np.min(sizeMap/2.0))); #radius resticted to the size of the ball in the box
-
-	maskData = mapUtil.makeCircularMask(mask, radiusBall);
-	maskCoeff = maskData[maskData > 0.0].size/float(mask.size);
-
-	return maskCoeff, maskData;
-
 #-------------------------------------------------------
 def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsymUnits, mask):
 
@@ -465,9 +469,10 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 	numCalculations = len(range(boxSize, boxSize + sizeMap[0], stepSize)) * len(range(boxSize, boxSize + sizeMap[1], stepSize)) * len(range(boxSize, boxSize + sizeMap[0], stepSize));
 	print("Total number of calculations: " + repr(numCalculations));
 
-	#calc local Resolutions
 	#****************************************************
-	#get initial permuted CorCoeffs
+	#******** get  initial permuted CorCoeffs ***********
+	#****************************************************
+
 	print("Do initial permuations ...");
 	for i in range(10):
 
@@ -499,9 +504,11 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 			#append the correlation coefficients
 			for resInd in range(len(tmpPermutedCorCoeffs)):
 				permutedCorCoeffs[resInd] = np.append(permutedCorCoeffs[resInd], tmpPermutedCorCoeffs[resInd]);
+	
+
 	#****************************************************
-
-
+	#********* calculate the local resolutions **********
+	#****************************************************
 
 	print("Do local FSC calculations ...");
 	calcInd = 0;
@@ -543,6 +550,9 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 			jInd = jInd + 1;
 		iInd = iInd + 1;
 
+	#*************************************
+	#********** do interpolation *********
+	#*************************************
 
 	from scipy.interpolate import RegularGridInterpolator
 	x = np.linspace(1, 10, locRes.shape[0]);
@@ -559,138 +569,5 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 
 	localRes = my_interpolating_function((xInd, yInd, zInd));
 
-	#zoomFactor = sizeMap[0]/float(locRes.shape[0]);
-	#if zoomFactor != 0.0:
-	#	localRes = ndimage.zoom(tmpLocRes, zoomFactor, order=1);
-
-	#localRes = roundMapToVectorElements(localRes, apix); 
-
 	localRes[mask <= 0.99] = 0.0;
-	#localRes[localRes > 50.0] = 100.0;
 
-
-	return localRes;
-
-#-------------------------------------------------------
-def simulatedVolumes(maskData, numAsymUnits):
-
-	import mrcfile
-
-	numVolumes = 5000;
-	i=0;
-	while i < numVolumes:
-
-		print(i);
-		indVol1 = np.random.randint(100);
-		indVol2 = np.random.randint(100);
-
-		filename1 = "/Users/mbeckers/Desktop/FSC_FDR/noiseVolumes/noiseVol/unmasked/map_"+ (repr(indVol1)) + ".mrc"
-		filename2 = "/Users/mbeckers/Desktop/FSC_FDR/noiseVolumes/noiseVol/unmasked/map_" + (repr(indVol2)) + ".mrc"
-		half1 = mrcfile.open(filename1, mode='r+');
-		half1Data = np.copy(half1.data);
-		half2 = mrcfile.open(filename2, mode='r+');
-		half2Data = np.copy(half2.data);
-
-		#half1Data = half1Data[:70,:70,:70];
-		#half2Data = half2Data[:70,:70,:70];
-
-		#half1Data = half1Data*maskData;
-		#half2Data = half2Data*maskData;
-
-		#hannWindow = makeHannWindow(half1Data);
-		hannWindow = makeCircularMask(half1Data, (half1Data.shape[0]/2.0)-4.0)
-
-		#do analysis
-		#ftHann = np.fft.fftn(hannWindow);
-		#powSpecHann = np.square(np.absolute(ftHann));
-		#maxel = np.max(powSpecHann);
-		#print(powSpecHann[powSpecHann>(maxel*0.2)].size - 1.0);
-
-		half1Data = half1Data*hannWindow;
-		half2Data = half2Data*hannWindow;
-
-		if i == 0:
-
-			_, _, _, _, _, _, permutedCorCoeffs = FSC(half1Data, half2Data, None, 1, 0.143, numAsymUnits, False, False, None);
-			#******************************** ** ** ** ** ** ** ** ** ** **
-
-		res, tmpFSC, percentCutoffs, threeSigma, threeSigmaCorr, resolution_FDR, _ = FSC(half1Data, half2Data, None, 1, 0.143, numAsymUnits, False, True, permutedCorCoeffs);
-		if i == 0:
-			FSC_data = np.zeros((res.shape[0], numVolumes));
-
-		FSC_data[:, i] = tmpFSC;
-
-		if indVol1 == indVol2:
-			print("Repeat iteration ...");
-			i = i;
-		else:
-			i = i + 1;
-
-	res, tmpFSC, percentCutoffs, threeSigma, threeSigmaCorr, resolution_FDR, _ = FSC(half1Data, half2Data, None, 1, 0.143, numAsymUnits, False, True, None);
-	#do plotting
-	onePercent = np.zeros(res.shape[0]);
-	fivePercent = np.zeros(res.shape[0]);
-	tenPercent = np.zeros(res.shape[0]);
-	_onePercent = np.zeros(res.shape[0]);
-
-	for i in range(res.shape[0]):
-
-		tmpFSCdata = FSC_data[i, :];
-		tmpFSCdata = np.sort(tmpFSCdata);
-
-		onePercent[i] = tmpFSCdata[int(numVolumes - math.floor(numVolumes * 0.01)) - 1];
-		fivePercent[i] = tmpFSCdata[int(numVolumes - math.floor(numVolumes * 0.05)) - 1];
-		tenPercent[i] = tmpFSCdata[int(numVolumes - math.floor(numVolumes * 0.10)) - 1];
-		_onePercent[i] = tmpFSCdata[int(numVolumes - math.floor(numVolumes * 0.0015)) - 1];
-
-	plt.semilogy(res[0:], onePercent[0:], linewidth = 0.5, color = 'b');
-	plt.semilogy(res[0:], _onePercent[0:], linewidth = 0.5, color = 'b');
-	plt.semilogy(res[0:], fivePercent[0:], linewidth = 0.5, color = 'b');
-	plt.semilogy(res[0:], tenPercent[0:], linewidth = 0.5, color='b');
-
-	#plt.semilogy(res[0:], threeSigma[0:], color = 'm', linewidth=0.5);
-	#plt.semilogy(res[0:], threeSigmaCorr[0:], color='m', linewidth=0.5);
-
-	#plot percent cutoffs
-	for i in range(percentCutoffs.shape[1]):
-		plt.semilogy(res[0:], percentCutoffs[0:, i], linewidth = 0.5, color = 'r');
-
-	plt.savefig("simulation_noiseVolumes_hannWindow.pdf", dpi=600);
-	plt.close();
-
-#---------------------------------------------------
-def comparisonSignalWithNoise(maskData, numAsymUnits):
-
-	import mrcfile
-
-	#analyse two noise vols
-	filename1 = "/Users/mbeckers/Desktop/FSC_FDR/noiseVolumes/simulatedMap/SNR0122/noiseMap_sd3.5_half1.mrc"
-	filename2 = "/Users/mbeckers/Desktop/FSC_FDR/noiseVolumes/simulatedMap/SNR0122/noiseMap_sd3.5_half2.mrc"
-	half1 = mrcfile.open(filename1, mode='r+');
-	half1Data_noise = np.copy(half1.data);
-	half2 = mrcfile.open(filename2, mode='r+');
-	half2Data_noise = np.copy(half2.data);
-
-	res, tmpFSC, percentCutoffs, threeSigma, threeSigmaCorr, resolution_FDR = FSC(half1Data_noise, half2Data_noise, 1, 0.143, numAsymUnits, True, maskData);
-
-	#analyse two signal + noise vol
-	filename1 = "/Users/mbeckers/Desktop/FSC_FDR/noiseVolumes/simulatedMap/SNR0122/map_0.mrc"
-	filename2 = "/Users/mbeckers/Desktop/FSC_FDR/noiseVolumes/simulatedMap/SNR0122/map_1.mrc"
-	half1 = mrcfile.open(filename1, mode='r+');
-	half1Data_noiseSignal = np.copy(half1.data);
-	half2 = mrcfile.open(filename2, mode='r+');
-	half2Data_noiseSignal = np.copy(half2.data);
-
-	res_withS, tmpFSC_withS, percentCutoffs_withS, threeSigma_withS, threeSigmaCorr_withS, resolution_FDR_withS = FSC(half1Data_noiseSignal, half2Data_noiseSignal, 1, 0.143, numAsymUnits, True, maskData);
-
-	#do plotting
-	for i in range(percentCutoffs.shape[1]):
-		plt.semilogy(res[0:], percentCutoffs[0:, i], linewidth = 0.5, color = 'b');
-
-	for i in range(percentCutoffs.shape[1]):
-		plt.semilogy(res[0:], percentCutoffs_withS[0:, i], linewidth = 0.5, color = 'r');
-
-	#plt.semilogy(res[0:], threeSigmaCorr[0:], color='m', linewidth=0.5);
-
-	plt.savefig("noise+signal_snr0122.pdf", dpi=300);
-	plt.close();

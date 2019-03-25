@@ -67,7 +67,6 @@ def main():
 	halfMap1Data = np.copy(halfMap1.data);
 	halfMap2Data = np.copy(halfMap2.data);
 
-
 	#set pixel size
 	apix = float(halfMap1.voxel_size.x);
 	if args.apix is not None:
