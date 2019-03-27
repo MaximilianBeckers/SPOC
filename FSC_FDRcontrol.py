@@ -23,24 +23,14 @@ cmdl_parser.add_argument('-halfmap2', '--halfmap2', metavar="halfmap2.mrc", type
 						 help='Input filename halfmap 2');
 cmdl_parser.add_argument('-p', '--apix', metavar="apix", type=float, required=False,
 						 help='pixel Size of input map');
-cmdl_parser.add_argument('-fdr', '--fdr', metavar="fdr", type=float, required=False,
-						 help='False Discovery Rate');
 cmdl_parser.add_argument('-localResolutions', action='store_true', default=False,
 						 help='Flag for calculation of local resolution');
-cmdl_parser.add_argument('-method', metavar="method", type=str, required=False,
-						 help="Method for multiple testing correction. 'BY' for Benjamini-Yekutieli, 'BH' for Benjamini-Hochberg or 'Holm' for Holm FWER control");
 cmdl_parser.add_argument('-w', '--window_size', metavar="windowSize", type=float, required=False,
 						 help="Input window size for local Amplitude scaling and background noise estimation");
-cmdl_parser.add_argument('-o', '--outputFilename', metavar="output.mrc", type=str, required=False,
-						 help="Name of the output for local resolutions map. Example: locRes.mrc");
-cmdl_parser.add_argument('-testProc', '--testProc', type=str, required=False,
-						 help="choose between right, left and two-sided testing");
 cmdl_parser.add_argument('-stepSize', '--stepSize', metavar="stepSize_locScale", type=int, required=False,
 						 help="Voxels to skip for local amplitude scaling");
 cmdl_parser.add_argument('-numAsymUnits', '--numAsymUnits', type=int, required=False,
 						 help="number of asymmtetric units for correction of symmetry effects")
-cmdl_parser.add_argument('-mask', metavar="mask.mrc", type=str, required=False,
-						 help='Input filename mask')
 
 # ************************************************************
 # ********************** main function ***********************
@@ -78,19 +68,9 @@ def main():
 
 
 	# set output filename
-	if args.outputFilename is not None:
-		splitFilename = os.path.splitext(os.path.basename(args.outputFilename));
-	else:
-		splitFilename = os.path.splitext(os.path.basename(args.halfmap1));
+	splitFilename = os.path.splitext(os.path.basename(args.halfmap1));
 	outputFilename = splitFilename[0] + "_localResolutions.mrc";
 
-
-	# handle FDR correction procedure
-	if args.method is not None:
-		method = args.method;
-	else:
-		# default is Benjamini-Yekutieli
-		method = 'BH';
 
 
 	#handle window size for local FSC
@@ -114,14 +94,9 @@ def main():
 	else:
 		numAsymUnits = float(args.numAsymUnits);
 
-
-	#make mask
-	if args.mask is not None:
-		mask = mrcfile.open(args.mask, mode='r');
-		maskData = np.copy(mask.data);
-	else:
-		print("Using a circular mask ...");
-		maskData = FSCutil.makeCircularMask(halfMap1Data, (np.min(halfMap1Data.shape) / 2.0) - 4.0);
+	#make the mask
+	print("Using a circular mask ...");
+	maskData = FSCutil.makeCircularMask(halfMap1Data, (np.min(halfMap1Data.shape) / 2.0) - 4.0);
 
 
 	#-------------------------------------------

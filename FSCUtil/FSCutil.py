@@ -158,7 +158,6 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 				output = "%.1f" %(progress*100) + "% finished ..." ;
 				print(output);
 		
-
 	pVals[0] = 0.0;
 
 	if localRes:
@@ -515,11 +514,11 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 	iInd = 0;
 	jInd = 0;
 	kInd = 0;
-	for i in xrange(boxSize, boxSize + sizeMap[0], stepSize):
+	for i in range(boxSize, boxSize + sizeMap[0], stepSize):
 		jInd = 0;
-		for j in xrange(boxSize, boxSize + sizeMap[1], stepSize):
+		for j in range(boxSize, boxSize + sizeMap[1], stepSize):
 			kInd = 0;
-			for k in xrange(boxSize, boxSize + sizeMap[2], stepSize):
+			for k in range(boxSize, boxSize + sizeMap[2], stepSize):
 
 				if paddedMask[i, j, k] > 0.99:
 					window_halfmap1 = paddedHalfMap1[i - halfBoxSize: i - halfBoxSize + boxSize, j - halfBoxSize: j - halfBoxSize + boxSize, k - halfBoxSize: k - halfBoxSize + boxSize];
@@ -571,3 +570,4 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 
 	localRes[mask <= 0.99] = 0.0;
 
+	return localRes;
