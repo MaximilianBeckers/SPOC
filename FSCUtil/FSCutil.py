@@ -2,9 +2,15 @@ import numpy as np
 from confidenceMapUtil import FDRutil 
 import matplotlib.pyplot as plt
 import math
+from scipy.interpolate import RegularGridInterpolator
 
 #-----------------------------------------------------
 def calculate_frequency_map(map):
+
+	#*********************************************************
+	#*** calculation of the frequency map of the given map ***
+	#*********************************************************
+
 	sizeMap = map.shape;
 
 	if map.ndim == 3:
@@ -52,8 +58,14 @@ def calculate_frequency_map(map):
 		frequencyMap = np.sqrt(freqMapi + freqMapj);
 
 	return frequencyMap;
+
 #---------------------------------------------------------------------------------
 def makeCircularMask(map, sphereRadius):
+
+	#***********************************************************
+	#************** calculate spherical mask-map ***************
+	#*** with sizei of the given map and radius sphereRadius ***
+	#***********************************************************
 
 	#some initialization
 	mapSize = map.shape;
@@ -81,6 +93,10 @@ def makeCircularMask(map, sphereRadius):
 #---------------------------------------------------------------------------------
 def makeHannWindow(map):
 
+	#***********************************************************
+	#*** generate Hann window with the size of the given map ***
+	#***********************************************************
+
 	#some initialization
 	mapSize = map.shape;
 
@@ -97,8 +113,13 @@ def makeHannWindow(map):
 	windowMap[radiusMap>(mapSize[0]/2.0)] = 0.0;
 
 	return windowMap;
+
 #--------------------------------------------------------
 def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verbose, permutedCorCoeffs):
+
+	#********************************************
+	#***** function that calculates the FSC *****
+	#********************************************
 
 	if localRes:
 		maskCoeff = 0.23;
@@ -232,16 +253,6 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 	except:
 		resolution_FWER = 2.0*apix;
 
-	# get 3 sigma threshold
-	#resolution_3Sigma = 0.0;
-	#for i in range(FSC.shape[0]):
-	#	if FSC[i] < threeSigmaCorr[i]:
-	#		if threeSigmaCorr[i] == 1.0:
-	#			continue;
-	#
-	#		tmpFreq = res[i-1] #+ (res[i] - res[i-1])/2.0;
-	#		resolution_3Sigma = float(1.0/tmpFreq);
-	#		break;
 
 	if verbose:
 		print('Resolution at ' + repr(cutoff) + ' FSC threshold: ' + repr(round(resolution, 2)));
@@ -252,6 +263,10 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 
 #--------------------------------------------------------
 def correlationCoefficient(sample1, sample2):
+
+	#*******************************
+	#*** calc. correlation coeff ***
+	#*******************************
 
 	FSCnominator = np.sum((sample1 * np.conj(sample2)) + (np.conj(sample1) * sample2));
 	FSCdenominator = np.sqrt(np.sum(2.0*np.square(np.absolute(sample1))) * 2.0*np.sum(np.square(np.absolute(sample2))));
@@ -265,6 +280,10 @@ def correlationCoefficient(sample1, sample2):
 
 #--------------------------------------------------------
 def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
+
+	#***************************************************
+	#**** permutation-test of the two given samples ****
+	#***************************************************
 
 	#now get effective sample sizes
 	numSamples = sample2.shape[0];
@@ -378,15 +397,11 @@ def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
 	return pValue, percentCutoffs, threeSigma, threeSigmaCorr, permutedCorCoeffs;
 
 #--------------------------------------------------------
-def permute_columns(x):
-
-	ix_i = np.random.sample(x.shape).argsort(axis=0);
-	ix_j = np.tile(np.arange(x.shape[1]), (x.shape[0], 1));
-
-	return x[ix_i, ix_j];
-
-#--------------------------------------------------------
 def writeFSC(resolutions, FSC, percentCutoffs, qValuesFWER, qValuesFDR):
+
+	#*******************************
+	#******* write FSC plots *******
+	#*******************************
 
 	plt.plot(resolutions, FSC, label="FSC", linewidth=1.5);
 
@@ -440,6 +455,11 @@ def roundMapToVectorElements(map, apix):
 
 #-------------------------------------------------------
 def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsymUnits, mask):
+
+	#********************************************
+	#****** calculate local resolutions by ******
+	#********** local FSC-thresholding **********
+	#********************************************
 
 	print("Starting calculations of local resolutions ...");
 
@@ -553,7 +573,6 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 	#********** do interpolation *********
 	#*************************************
 
-	from scipy.interpolate import RegularGridInterpolator
 	x = np.linspace(1, 10, locRes.shape[0]);
 	y = np.linspace(1, 10, locRes.shape[1]);
 	z = np.linspace(1, 10, locRes.shape[2]);

@@ -39,20 +39,16 @@ cmdl_parser.add_argument('-numAsymUnits', '--numAsymUnits', type=int, required=F
 def main():
 	start = time.time();
 
-
 	print('***************************************************');
 	print('******* Significance analysis of FSC curves *******');
 	print('***************************************************');
 
-
 	# get command line input
 	args = cmdl_parser.parse_args();
-
 
 	#read the half maps
 	halfMap1 = mrcfile.open(args.halfmap1, mode='r');
 	halfMap2 = mrcfile.open(args.halfmap2, mode='r');
-
 
 	halfMap1Data = np.copy(halfMap1.data);
 	halfMap2Data = np.copy(halfMap2.data);
@@ -66,12 +62,9 @@ def main():
 		print('Pixel size was read as {:.3f} Angstroem. If this is incorrect, please specify with -p pixelSize'.format(apix));
 		args.apix = apix;
 
-
 	# set output filename
 	splitFilename = os.path.splitext(os.path.basename(args.halfmap1));
 	outputFilename = splitFilename[0] + "_localResolutions.mrc";
-
-
 
 	#handle window size for local FSC
 	if args.window_size is not None:
@@ -98,17 +91,20 @@ def main():
 	print("Using a circular mask ...");
 	maskData = FSCutil.makeCircularMask(halfMap1Data, (np.min(halfMap1Data.shape) / 2.0) - 4.0);
 
+	#*******************************************
+	#********** no local Resolutions ***********
+	#*******************************************
 
-	#-------------------------------------------
-	#---------- no local Resolutions -----------
 	if not args.localResolutions:
 		res, FSC, percentCutoffs, qValsFWER, qValsFDR, resolution, _ = FSCutil.FSC(halfMap1Data, halfMap2Data,
 																					  maskData, apix, 0.143,
 																					  numAsymUnits, False, True, None);
 		# write the FSC
 		FSCutil.writeFSC(res, FSC, percentCutoffs, qValsFWER, qValsFDR);
-	#-------------------------------------------
-	#--------- calc local Resolutions ----------
+
+	#*******************************************
+	#********* calc local Resolutions **********
+	#*******************************************
 	else:
 		FSCcutoff = 0.5;
 		localResMap = FSCutil.localResolutions(halfMap1Data, halfMap2Data, wn, stepSize, FSCcutoff, apix, numAsymUnits,
@@ -121,13 +117,11 @@ def main():
 		localResMapMRC.voxel_size = apix;
 		localResMapMRC.close();
 
-
 	end = time.time();
 	totalRuntime = end - start;
 	
 	print("****** Summary ******");
 	print("Runtime: %.2f" %totalRuntime);
-
 
 if (__name__ == "__main__"):
 	main()
