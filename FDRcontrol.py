@@ -181,16 +181,16 @@ def main():
 
 	if (locScaleMap is not None) | (locFiltMap is not None):
 		meanMapMRC = mrcfile.new(splitFilename[0] + '_mean.mrc', overwrite=True);
-                mean = np.float32(mean);
-                meanMapMRC.set_data(mean);
-                meanMapMRC.voxel_size = apix;
-                meanMapMRC.close();
+		mean = np.float32(mean);
+		meanMapMRC.set_data(mean);
+		meanMapMRC.voxel_size = apix;
+		meanMapMRC.close();
 
 		varMapMRC = mrcfile.new(splitFilename[0] + '_var.mrc', overwrite=True);
-                var = np.float32(var);
-                varMapMRC.set_data(var);
-                varMapMRC.voxel_size = apix;
-                varMapMRC.close();
+		var = np.float32(var);
+		varMapMRC.set_data(var);
+		varMapMRC.voxel_size = apix;
+		varMapMRC.close();
 
 
 	#write the confidence Maps

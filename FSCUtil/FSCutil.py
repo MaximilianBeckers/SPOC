@@ -90,29 +90,49 @@ def makeCircularMask(map, sphereRadius):
 
 	return mask;
 
+
 #---------------------------------------------------------------------------------
-def makeHannWindow(map):
+def estimateBfactor(map, resolution, apix, maskData):
 
-	#***********************************************************
-	#*** generate Hann window with the size of the given map ***
-	#***********************************************************
+	sizeMap = map.shape;
 
-	#some initialization
-	mapSize = map.shape;
+	#calculate the frequency map
+	freqMap = calculate_frequency_map(map);
+	freqMap = freqMap/float(apix);
 
-	x = np.linspace(-math.floor(mapSize[0]/2.0), -math.floor(mapSize[0]/2.0) + mapSize[0], mapSize[0]);
-	y = np.linspace(-math.floor(mapSize[1]/2.0), -math.floor(mapSize[1]/2.0) + mapSize[1], mapSize[1]);
-	z = np.linspace(-math.floor(mapSize[2]/2.0), -math.floor(mapSize[2]/2.0) + mapSize[2], mapSize[2]);
+	FFTmap = np.fft.rfftn(map*maskData);
 
-	xx, yy, zz = np.meshgrid(x, y, z, indexing='ij');
+	res = np.fft.rfftfreq(sizeMap[0], 1.0);
+	res = res / float(apix);
+	numRes = res.shape[0];
+	resSpacing = (res[1] - res[0]) / 2.0;
 
-	radiusMap = np.sqrt(xx**2 + yy**2 + zz**2);
+	resSquared = res*res;
+	lnF = np.copy(resSquared);
 
-	windowMap = 0.5*(1.0 - np.cos((2.0*np.pi*radiusMap/map.shape[0]) + np.pi));
+	#generate data for guinier plot
+	for i in range(numRes):
 
-	windowMap[radiusMap>(mapSize[0]/2.0)] = 0.0;
+		tmpRes = res[i];
+		rotAvgStrucFac = np.mean(np.absolute(FFTmap[((tmpRes - resSpacing) < freqMap) & (freqMap <= (tmpRes + resSpacing))]));
 
-	return windowMap;
+		lnF[i] = np.log(rotAvgStrucFac);
+
+	#do linear regression alpha+beta*x for resolutions better than 10 Angstroem
+	subset_lnF = lnF[(res>(1.0/10.0)) & (res<(1.0/float(resolution)))];
+	subset_res = resSquared[(res>(1.0/10.0)) & (res<(1.0/float(resolution)))];
+
+	bFactor = (np.sum(subset_lnF*subset_res) - (1.0/float(subset_res.size))*np.sum(subset_lnF)*np.sum(subset_res))/(np.sum(np.square(subset_res))- (1.0/subset_res.size)*(np.square(np.sum(subset_res))));
+	alpha = np.mean(subset_lnF) - bFactor*np.mean(subset_res);
+
+	plt.plot(resSquared, lnF, label="Guinier Plot", linewidth=1.5);
+	plt.savefig("guinierPlot.pdf", dpi=300);
+	plt.close();
+
+	output = "Estimated B-factor of the provided map: %.2f" % (-4.0*bFactor);
+	print(output);
+
+	return -4.0*bFactor;
 
 #--------------------------------------------------------
 def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verbose, permutedCorCoeffs):
@@ -483,7 +503,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 	halfStepSize = int(stepSize/2.0);
 
 	#make Hann window
-	hannWindow = makeHannWindow(np.zeros((boxSize, boxSize, boxSize)));
+	hannWindow = FDRutil.makeHannWindow(np.zeros((boxSize, boxSize, boxSize)));
 
 	numCalculations = len(range(boxSize, boxSize + sizeMap[0], stepSize)) * len(range(boxSize, boxSize + sizeMap[1], stepSize)) * len(range(boxSize, boxSize + sizeMap[0], stepSize));
 	print("Total number of calculations: " + repr(numCalculations));

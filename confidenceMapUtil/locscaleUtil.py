@@ -178,7 +178,6 @@ def calculate_scaled_map(emmap, modmap, mask, wn, wn_locscale, apix, locFilt, lo
     else:
         noiseMap = emmap[int(boxCoord[0]-0.5*wn +wn_locscale/2.0):(int(boxCoord[0]-0.5*wn + wn_locscale/2.0) + wn), int(boxCoord[1]-0.5*wn+ wn_locscale/2.0):(int(boxCoord[1]-0.5*wn + wn_locscale/2.0) + wn), (int(boxCoord[2]-0.5*wn + wn_locscale/2.0)):(int((boxCoord[2]-0.5*wn + wn_locscale/2.0)+wn))];
 
-
     #prepare noise map for scaling
     frequencyMap_noise = FDRutil.calculate_frequency_map(noiseMap);
     noiseMapFFT = np.fft.rfftn(noiseMap, norm='ortho');
@@ -186,6 +185,7 @@ def calculate_scaled_map(emmap, modmap, mask, wn, wn_locscale, apix, locFilt, lo
     
     #prepare windows of particle for scaling
     frequencyMap_mapWindow = FDRutil.calculate_frequency_map(np.zeros((wn_locscale, wn_locscale, wn_locscale)));
+
 
     numSteps = len(range(0, sizeMap[0] - int(wn_locscale), stepSize))*len(range(0, sizeMap[1] - int(wn_locscale), stepSize))*len(range(0, sizeMap[2] - int(wn_locscale), stepSize));
     print("Sart LocScale. This might take a minute ...");
@@ -202,9 +202,8 @@ def calculate_scaled_map(emmap, modmap, mask, wn, wn_locscale, apix, locFilt, lo
                         print(output);                   
 
                 #crop windows
-                emmap_wn = emmap[k: k + wn_locscale, j: j + wn_locscale, i: i + wn_locscale];
-                modmap_wn = modmap[k: k + wn_locscale, j: j + wn_locscale, i: i + wn_locscale];                
-
+                emmap_wn = emmap[k: k + wn_locscale, j: j + wn_locscale, i: i + wn_locscale] ;
+                modmap_wn = modmap[k: k + wn_locscale, j: j + wn_locscale, i: i + wn_locscale] ;
 
                 #do sharpening of the sliding window
                 emmap_wn_FFT = np.fft.rfftn(np.copy(emmap_wn), norm='ortho');
@@ -213,7 +212,6 @@ def calculate_scaled_map(emmap, modmap, mask, wn, wn_locscale, apix, locFilt, lo
                 mod_profile, _ = compute_radial_profile(modmap_wn_FFT, frequencyMap_mapWindow);
                 scale_factors = compute_scale_factors(em_profile, mod_profile);
                 map_b_sharpened, map_b_sharpened_FFT = set_radial_profile(emmap_wn_FFT, scale_factors, frequencies_map, frequencyMap_mapWindow, emmap_wn.shape);
-                  
 
                 #scale noise window with the interpolated scaling factors
                 mapNoise_sharpened, mapNoise_sharpened_FFT = set_radial_profile(np.copy(noiseMapFFT), scale_factors, frequencies_map, frequencyMap_noise, noiseMap.shape);
@@ -227,7 +225,8 @@ def calculate_scaled_map(emmap, modmap, mask, wn, wn_locscale, apix, locFilt, lo
                     
                     #calculate noise statistics	  
                     map_noise_sharpened_data = mapNoise_sharpened;	   
-                        
+                    #map_noise_sharpened_data = map_noise_sharpened_data[hannWindow>0.3];
+
                     if ecdfBool:
                         tmpECDF, sampleSort = FDRutil.estimateECDFFromMap(map_noise_sharpened_data, -1, -1);
                         ecdf = np.interp(map_b_sharpened[central_pix, central_pix, central_pix], sampleSort, tmpECDF, left=0.0, right=1.0); 
@@ -247,7 +246,8 @@ def calculate_scaled_map(emmap, modmap, mask, wn, wn_locscale, apix, locFilt, lo
                 else:    
                     #calculate noise statistics
                     map_noise_sharpened_data = np.copy(mapNoise_sharpened);
-                 
+                    #map_noise_sharpened_data = map_noise_sharpened_data[hannWindow>0.3];
+
                     if ecdfBool:
                         tmpECDF, sampleSort = FDRutil.estimateECDFFromMap(map_noise_sharpened_data, -1, -1);
                         ecdf = np.interp(map_b_sharpened, sampleSort, tmpECDF, left=0.0, right=1.0); 

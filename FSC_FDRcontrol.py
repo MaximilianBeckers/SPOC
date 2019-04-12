@@ -2,6 +2,7 @@
 
 # import some stuff
 from FSCUtil import FSCutil
+from confidenceMapUtil import FDRutil
 import numpy as np
 import argparse, os, sys
 import os.path
@@ -31,6 +32,8 @@ cmdl_parser.add_argument('-stepSize', '--stepSize', metavar="stepSize_locScale",
 						 help="Voxels to skip for local amplitude scaling");
 cmdl_parser.add_argument('-numAsymUnits', '--numAsymUnits', type=int, required=False,
 						 help="number of asymmtetric units for correction of symmetry effects")
+cmdl_parser.add_argument('-bFactor', '--bFactor', type=float, required=False,
+						 help="B-Factor for sharpening of the map")
 
 # ************************************************************
 # ********************** main function ***********************
@@ -64,7 +67,8 @@ def main():
 
 	# set output filename
 	splitFilename = os.path.splitext(os.path.basename(args.halfmap1));
-	outputFilename = splitFilename[0] + "_localResolutions.mrc";
+	outputFilename_LocRes = splitFilename[0] + "_localResolutions.mrc";
+	outputFilename_PostProcessed = splitFilename[0] + "_postProcessed.mrc";
 
 	#handle window size for local FSC
 	if args.window_size is not None:
@@ -90,6 +94,7 @@ def main():
 	#make the mask
 	print("Using a circular mask ...");
 	maskData = FSCutil.makeCircularMask(halfMap1Data, (np.min(halfMap1Data.shape) / 2.0) - 4.0);
+	maskBFactor = FSCutil.makeCircularMask(halfMap1Data, (np.min(halfMap1Data.shape) / 4.0) - 4.0);
 
 	#*******************************************
 	#********** no local Resolutions ***********
@@ -102,6 +107,24 @@ def main():
 		# write the FSC
 		FSCutil.writeFSC(res, FSC, percentCutoffs, qValsFWER, qValsFDR);
 
+
+		bFactor = FSCutil.estimateBfactor(0.5*(halfMap1Data+halfMap2Data), apix, resolution, maskBFactor);
+
+		if args.bFactor is not None:
+			bFactor = args.bFactor;
+			print('Using a user-specified B-factor of {:.2f} for map sharpening'.format(bFactor));
+		else:
+			print('Using a B-factor of {:.2f} for map sharpening.'.format(-bFactor));
+
+		processedMap = FDRutil.sharpenMap(0.5*(halfMap1Data+halfMap2Data), -bFactor, apix, resolution);
+
+		#write the post-processed map
+		postProcMRC = mrcfile.new(outputFilename_PostProcessed, overwrite=True);
+		postProc= np.float32(processedMap);
+		postProcMRC.set_data(postProc);
+		postProcMRC.voxel_size = apix;
+		postProcMRC.close();
+
 	#*******************************************
 	#********* calc local Resolutions **********
 	#*******************************************
@@ -111,7 +134,7 @@ def main():
 											   maskData);
 
 		#write the local resolution map
-		localResMapMRC = mrcfile.new(outputFilename, overwrite=True);
+		localResMapMRC = mrcfile.new(outputFilename_LocRes, overwrite=True);
 		localResMap = np.float32(localResMap);
 		localResMapMRC.set_data(localResMap);
 		localResMapMRC.voxel_size = apix;
@@ -122,6 +145,13 @@ def main():
 	
 	print("****** Summary ******");
 	print("Runtime: %.2f" %totalRuntime);
+
+	if not args.localResolutions:
+		output = "Saved sharpened and filtered map to: " + outputFilename_PostProcessed;
+		print(output);
+	else:
+		output = "Saved local resolutions map to: " + outputFilename_LocRes;
+		print(output);
 
 if (__name__ == "__main__"):
 	main()

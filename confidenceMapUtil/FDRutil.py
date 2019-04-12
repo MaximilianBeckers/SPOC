@@ -56,6 +56,31 @@ def estimateNoiseFromMap(map, windowSize, boxCoord):
 		sys.exit();
 
 	return mean, var, sampleMap;
+
+#---------------------------------------------------------------------------------
+def makeHannWindow(map):
+
+	#***********************************************************
+	#*** generate Hann window with the size of the given map ***
+	#***********************************************************
+
+	#some initialization
+	mapSize = map.shape;
+
+	x = np.linspace(-math.floor(mapSize[0]/2.0), -math.floor(mapSize[0]/2.0) + mapSize[0], mapSize[0]);
+	y = np.linspace(-math.floor(mapSize[1]/2.0), -math.floor(mapSize[1]/2.0) + mapSize[1], mapSize[1]);
+	z = np.linspace(-math.floor(mapSize[2]/2.0), -math.floor(mapSize[2]/2.0) + mapSize[2], mapSize[2]);
+
+	xx, yy, zz = np.meshgrid(x, y, z, indexing='ij');
+
+	radiusMap = np.sqrt(xx**2 + yy**2 + zz**2);
+
+	windowMap = 0.5*(1.0 - np.cos((2.0*np.pi*radiusMap/map.shape[0]) + np.pi));
+
+	windowMap[radiusMap>(mapSize[0]/2.0)] = 0.0;
+
+	return windowMap;
+
 #-------------------------------------------------------------------------------------
 def estimateNoiseFromMapInsideMask(map, mask):
 
@@ -75,9 +100,16 @@ def estimateNoiseFromMapInsideMask(map, mask):
 	#estimate variance and mean from the sample
 	mean = np.mean(sampleMap);
 	var = np.var(sampleMap);
-	
-	
+
 	return mean, var, sampleMap;
+
+#-------------------------------------------------------------------------------------
+def estimateNoiseFromHalfMaps(halfmap1, halfmap2, circularMask):
+
+	halfmapDiff = halfmap1 - halfmap2;
+	varianceBackground = np.var(halfmapDiff[circularMask>0.5]);
+
+	return varianceBackground;
 
 #-------------------------------------------------------------------------------------
 def estimateECDFFromMap(map, windowSize, boxCoord):
@@ -536,6 +568,27 @@ def lowPassFilter(mapFFT, frequencyMap, cutoff, shape):
 	filteredMap = np.fft.irfftn(filteredftMap, shape);
 	filteredMap = np.real(filteredMap);
 	return filteredMap;
+
+#---------------------------------------------------------------------------------
+def sharpenMap(map, Bfactor, apix, resolution):
+
+	frequencyMap = calculate_frequency_map(map);
+	frequencyMap = frequencyMap;
+	res_cutoff = apix/resolution;
+
+	mapFFT = np.fft.rfftn(map);
+
+	# do filtering of the map
+	tmpFreqMap = np.copy(frequencyMap);
+	tmpFreqMap[frequencyMap==0.0] = 1.0;
+	sharpenMap = np.exp(-1.0*Bfactor*((tmpFreqMap/float(apix))**2)/4.0);
+	sharpenMap[frequencyMap==0.0] = 1.0;
+	sharpenedftMap = sharpenMap * mapFFT;
+
+	#filter the map at the given resolution
+	processedMap = lowPassFilter(sharpenedftMap, frequencyMap, res_cutoff, map.shape)
+
+	return processedMap;
 
 #---------------------------------------------------------------------------------
 def printSummary(args, time):
