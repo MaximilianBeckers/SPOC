@@ -134,7 +134,7 @@ def calculateConfidenceMap(em_map, apix, noiseBox, testProc, ecdf, lowPassFilter
 		
 	# threshold the qMap
 	binMap1 = FDRutil.binarizeMap(qMap, 0.01);
-	binMap001 = FDRutil.binarizeMap(qMap, 0.00001);
+	binMap001 = FDRutil.binarizeMap(qMap, 0.0001);
 
 	# apply the thresholded qMapFDR to data
 	maskedMap1 = np.multiply(binMap1, np.copy(em_map));
