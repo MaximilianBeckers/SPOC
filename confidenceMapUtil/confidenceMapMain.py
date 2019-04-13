@@ -145,7 +145,7 @@ def calculateConfidenceMap(em_map, apix, noiseBox, testProc, ecdf, lowPassFilter
 	# apply the thresholded qMapFWER to data
 	maskedMap001 = np.multiply(binMap001, np.copy(em_map));
 	minMapValue = np.min(maskedMap001[np.nonzero(maskedMap001)]);
-	output = "Calculated map threshold: %.3f" %minMapValue + " at a " + error + " of " + repr(0.001) + "%.";
+	output = "Calculated map threshold: %.3f" %minMapValue + " at a " + error + " of " + repr(0.01) + "%.";
 	print(output);
 
 	# invert qMap for visualization tools
