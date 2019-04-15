@@ -90,7 +90,6 @@ def makeCircularMask(map, sphereRadius):
 
 	return mask;
 
-
 #---------------------------------------------------------------------------------
 def estimateBfactor(map, resolution, apix, maskData):
 
@@ -125,8 +124,9 @@ def estimateBfactor(map, resolution, apix, maskData):
 	bFactor = (np.sum(subset_lnF*subset_res) - (1.0/float(subset_res.size))*np.sum(subset_lnF)*np.sum(subset_res))/(np.sum(np.square(subset_res))- (1.0/subset_res.size)*(np.square(np.sum(subset_res))));
 	alpha = np.mean(subset_lnF) - bFactor*np.mean(subset_res);
 
+	#make Guinier plot
 	plt.plot(resSquared, lnF, label="Guinier Plot", linewidth=1.5);
-	plt.savefig("guinierPlot.pdf", dpi=300);
+	plt.savefig("GuinierPlot.pdf", dpi=300);
 	plt.close();
 
 	output = "Estimated B-factor of the provided map: %.2f" % (-4.0*bFactor);
@@ -277,7 +277,7 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 	if verbose:
 		print('Resolution at ' + repr(cutoff) + ' FSC threshold: ' + repr(round(resolution, 2)));
 		print('Resolution at 1 % FDR: ' + repr(round(resolution_FDR, 2)) + ' Angstrom');
-		print('Resolution at 1 % FWER: ' + repr(round(resolution_FWER, 2)) + ' Angstrom');
+		#print('Resolution at 1 % FWER: ' + repr(round(resolution_FWER, 2)) + ' Angstrom');
 
 	return res, FSC, percentCutoffs, qVals_FWER, qVals_FDR, resolution_FDR, tmpPermutedCorCoeffs;
 
@@ -417,7 +417,7 @@ def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
 	return pValue, percentCutoffs, threeSigma, threeSigmaCorr, permutedCorCoeffs;
 
 #--------------------------------------------------------
-def writeFSC(resolutions, FSC, percentCutoffs, qValuesFWER, qValuesFDR):
+def writeFSC(resolutions, FSC, percentCutoffs, qValuesFDR):
 
 	#*******************************
 	#******* write FSC plots *******
@@ -431,10 +431,8 @@ def writeFSC(resolutions, FSC, percentCutoffs, qValuesFWER, qValuesFDR):
 
 	#threshold the adjusted pValues
 	qValuesFDR[qValuesFDR<=0.01] = 0.0;
-	qValuesFWER[qValuesFWER<=0.01] = 0.0;
 
 	plt.plot(resolutions[0:][qValuesFDR==0.0], qValuesFDR[qValuesFDR==0.0]-0.05, 'xb', label="sign. at 1% FDR");
-	plt.plot(resolutions[0:][qValuesFWER==0.0], qValuesFWER[qValuesFWER==0.0]-0.1, 'xm', label="sign. at 1% FWER");
 	plt.axhline(0.5, linewidth = 0.5, color = 'r');
 	plt.axhline(0.143, linewidth = 0.5, color = 'r');
 	plt.axhline(0.0, linewidth = 0.5, color = 'b');

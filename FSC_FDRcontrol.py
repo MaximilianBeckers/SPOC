@@ -105,9 +105,9 @@ def main():
 																					  maskData, apix, 0.143,
 																					  numAsymUnits, False, True, None);
 		# write the FSC
-		FSCutil.writeFSC(res, FSC, percentCutoffs, qValsFWER, qValsFDR);
+		FSCutil.writeFSC(res, FSC, percentCutoffs, qValsFDR);
 
-
+		#estimate b-factor and sharpen the map
 		bFactor = FSCutil.estimateBfactor(0.5*(halfMap1Data+halfMap2Data), apix, resolution, maskBFactor);
 
 		if args.bFactor is not None:
