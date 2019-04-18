@@ -19,7 +19,7 @@ cmdl_parser = argparse.ArgumentParser(
 	formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=30), add_help=True);
 
 cmdl_parser.add_argument('-halfmap1', '--halfmap1', metavar="halfmap1.mrc", type=str, required=True,
-						 help='Input filename  halfmap 1');
+						 help='Input filename halfmap 1');
 cmdl_parser.add_argument('-halfmap2', '--halfmap2', metavar="halfmap2.mrc", type=str, required=True,
 						 help='Input filename halfmap 2');
 cmdl_parser.add_argument('-p', '--apix', metavar="apix", type=float, required=False,

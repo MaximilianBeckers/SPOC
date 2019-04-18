@@ -255,28 +255,29 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 	except:
 		resolution_FDR = 2.0*apix;
 
-	threshQVals = np.copy(qVals_FWER);
-	threshQVals[threshQVals <= 0.01] = 0.0; #signal
-	threshQVals[threshQVals > 0.01] = 1.0 #no signal
+	threshQVals = np.copy(qVals_FDR);
+	threshQVals[threshQVals <= 0.0001] = 0.0; #signal
+	threshQVals[threshQVals > 0.0001] = 1.0 #no signal
 
 	try:
-		resolution_FWER = np.min(np.argwhere(threshQVals)) - 1;
+		resolution_FDR01 = np.min(np.argwhere(threshQVals)) - 1;
 
-		if resolution_FWER < 0:
-			resolution_FWER = 0.0;
+		if resolution_FDR01 < 0:
+			resolution_FDR01 = 0.0;
 		else:
-			if res[int(resolution_FWER)] == 0.0:
-				resolution_FWER = 0.0;
+			if res[int(resolution_FDR01)] == 0.0:
+				resolution_FDR01 = 0.0;
 			else:
-				tmpFreq = res[int(resolution_FWER)] #+ (res[resolution_FDR + 1] - res[resolution_FDR]) / 2.0;
-				resolution_FWER = float(1.0/tmpFreq);
+				tmpFreq = res[int(resolution_FDR01)] #+ (res[resolution_FDR + 1] - res[resolution_FDR]) / 2.0;
+				resolution_FDR01= float(1.0/tmpFreq);
 	except:
-		resolution_FWER = 2.0*apix;
+		resolution_FDR01 = 2.0*apix;
 
 
 	if verbose:
 		print('Resolution at ' + repr(cutoff) + ' FSC threshold: ' + repr(round(resolution, 2)));
 		print('Resolution at 1 % FDR: ' + repr(round(resolution_FDR, 2)) + ' Angstrom');
+		#print('Resolution at 0.01 % FDR: ' + repr(round(resolution_FDR01, 2)) + ' Angstrom');
 		#print('Resolution at 1 % FWER: ' + repr(round(resolution_FWER, 2)) + ' Angstrom');
 
 	return res, FSC, percentCutoffs, qVals_FWER, qVals_FDR, resolution_FDR, tmpPermutedCorCoeffs;

@@ -519,6 +519,7 @@ def tanh_filter(x, cutoff):
 	fx = 1.0 - (1.0 - 0.5*(np.tanh((np.pi*(x+cutoff)/(2*filter_fall_off*cutoff))) - np.tanh((np.pi*(x-cutoff)/(2*filter_fall_off*cutoff)))));
 
 	return fx;
+
 #---------------------------------------------------------------------------------
 def calculate_frequency_map(map):
 
