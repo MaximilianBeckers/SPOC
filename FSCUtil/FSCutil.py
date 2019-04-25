@@ -479,18 +479,28 @@ def getNumAsymUnits(symmetry):
 	#get symmetry group
 	symGroup = symmetry[0];
 
-	#get symmetry order
-	symOrder = symmetry[1];
-
 	if symGroup == 'C':
+
+		# get symmetry order
+		symOrder = symmetry[1:];
 		numAsymUnits = int(symOrder);
+
 	elif symGroup == 'D':
+
+		# get symmetry order
+		symOrder = symmetry[1:];
 		numAsymUnits = int(symOrder)*2;
+
 	elif symGroup == 'O':
+
 		numAsymUnits = 24;
+
 	elif symGroup == 'I':
+
 		numAsymUnits = 60;
+
 	else:
+
 		print("Symmetry not known. Exit ...");
 		sys.exit();
 
