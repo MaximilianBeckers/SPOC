@@ -2,6 +2,7 @@ import numpy as np
 from confidenceMapUtil import FDRutil 
 import matplotlib.pyplot as plt
 import math
+import sys
 from scipy.interpolate import RegularGridInterpolator
 
 #-----------------------------------------------------
@@ -471,6 +472,29 @@ def roundMapToVectorElements(map, apix):
 			map[(map>lower) & (map<=upper)] = 1.0/(res[i]);
 		
 	return map
+
+#-------------------------------------------------------
+def getNumAsymUnits(symmetry):
+
+	#get symmetry group
+	symGroup = symmetry[0];
+
+	#get symmetry order
+	symOrder = symmetry[1];
+
+	if symGroup == 'C':
+		numAsymUnits = int(symOrder);
+	elif symGroup == 'D':
+		numAsymUnits = int(symOrder)*2;
+	elif symGroup == 'O':
+		numAsymUnits = 24;
+	elif symGroup == 'I':
+		numAsymUnits = 60;
+	else:
+		print("Symmetry not known. Exit ...");
+		sys.exit();
+
+	return numAsymUnits;
 
 #-------------------------------------------------------
 def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsymUnits, mask):

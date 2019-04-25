@@ -30,6 +30,8 @@ cmdl_parser.add_argument('-w', '--window_size', metavar="windowSize", type=float
 						 help="Input window size for local Amplitude scaling and background noise estimation");
 cmdl_parser.add_argument('-stepSize', '--stepSize', metavar="stepSize_locScale", type=int, required=False,
 						 help="Voxels to skip for local amplitude scaling");
+cmdl_parser.add_argument('-symmetry', '--symmetry', type=str, required=False,
+						 help="symmetry for correction of symmetry effects")
 cmdl_parser.add_argument('-numAsymUnits', '--numAsymUnits', type=int, required=False,
 						 help="number of asymmtetric units for correction of symmetry effects")
 cmdl_parser.add_argument('-bFactor', '--bFactor', type=float, required=False,
@@ -85,11 +87,19 @@ def main():
 		stepSize = int(args.stepSize);
 
 
-	#handle number of asymmetric units
-	if args.numAsymUnits is None:
-		numAsymUnits = 1.0;
+	if args.numAsymUnits is not None:
+
+		numAsymUnits = args.numAsymUnits;
+		print('Using user provided number of asymmetric units, given as {:d}'.format(numAsymUnits));
 	else:
-		numAsymUnits = float(args.numAsymUnits);
+		if args.symmetry is not None:
+
+			numAsymUnits = FSCutil.getNumAsymUnits(args.symmetry);
+			print('Using provided ' + args.symmetry + ' symmetry. Number of asymmetric units: {:d}'.format(numAsymUnits));
+		else:
+			numAsymUnits = 1;
+			print('Using C1 symmetry. Number of asymmetric units: {:d}'.format(numAsymUnits));
+
 
 	#make the mask
 	print("Using a circular mask ...");
@@ -106,24 +116,28 @@ def main():
 																					  numAsymUnits, False, True, None);
 		# write the FSC
 		FSCutil.writeFSC(res, FSC, percentCutoffs, qValsFDR);
+		
+		if resolution < 5.0:
+			#estimate b-factor and sharpen the map
+			bFactor = FSCutil.estimateBfactor(0.5*(halfMap1Data+halfMap2Data), apix, resolution, maskBFactor);
 
-		#estimate b-factor and sharpen the map
-		bFactor = FSCutil.estimateBfactor(0.5*(halfMap1Data+halfMap2Data), apix, resolution, maskBFactor);
+			if args.bFactor is not None:
+				bFactor = args.bFactor;
+				print('Using a user-specified B-factor of {:.2f} for map sharpening'.format(bFactor));
+			else:
+				print('Using a B-factor of {:.2f} for map sharpening.'.format(-bFactor));
 
-		if args.bFactor is not None:
-			bFactor = args.bFactor;
-			print('Using a user-specified B-factor of {:.2f} for map sharpening'.format(bFactor));
-		else:
-			print('Using a B-factor of {:.2f} for map sharpening.'.format(-bFactor));
+			processedMap = FDRutil.sharpenMap(0.5*(halfMap1Data+halfMap2Data), -bFactor, apix, resolution);
 
-		processedMap = FDRutil.sharpenMap(0.5*(halfMap1Data+halfMap2Data), -bFactor, apix, resolution);
-
-		#write the post-processed map
-		postProcMRC = mrcfile.new(outputFilename_PostProcessed, overwrite=True);
-		postProc= np.float32(processedMap);
-		postProcMRC.set_data(postProc);
-		postProcMRC.voxel_size = apix;
-		postProcMRC.close();
+			#write the post-processed map
+			postProcMRC = mrcfile.new(outputFilename_PostProcessed, overwrite=True);
+			postProc= np.float32(processedMap);
+			postProcMRC.set_data(postProc);
+			postProcMRC.voxel_size = apix;
+			postProcMRC.close();
+			
+			output = "Saved sharpened and filtered map to: " + outputFilename_PostProcessed;
+			print(output);
 
 	#*******************************************
 	#********* calc local Resolutions **********
@@ -140,18 +154,14 @@ def main():
 		localResMapMRC.voxel_size = apix;
 		localResMapMRC.close();
 
+		output = "Saved local resolutions map to: " + outputFilename_LocRes;
+		print(output);
+
 	end = time.time();
 	totalRuntime = end - start;
 	
 	print("****** Summary ******");
 	print("Runtime: %.2f" %totalRuntime);
-
-	if not args.localResolutions:
-		output = "Saved sharpened and filtered map to: " + outputFilename_PostProcessed;
-		print(output);
-	else:
-		output = "Saved local resolutions map to: " + outputFilename_LocRes;
-		print(output);
 
 if (__name__ == "__main__"):
 	main()
