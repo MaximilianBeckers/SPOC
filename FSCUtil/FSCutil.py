@@ -558,16 +558,16 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 			yInd = np.random.randint(boxSize, sizeMap[1] + boxSize);
 			zInd = np.random.randint(boxSize, sizeMap[2] + boxSize);
 
-		window_halfmap1 = paddedHalfMap1[xInd - halfBoxSize: xInd - halfBoxSize + boxSize,
+		windowHalfmap1 = paddedHalfMap1[xInd - halfBoxSize: xInd - halfBoxSize + boxSize,
 					  yInd - halfBoxSize: yInd - halfBoxSize + boxSize, zInd - halfBoxSize: zInd - halfBoxSize + boxSize];
-		window_halfmap2 = paddedHalfMap2[xInd - halfBoxSize: xInd - halfBoxSize + boxSize,
+		windowHalfmap2 = paddedHalfMap2[xInd - halfBoxSize: xInd - halfBoxSize + boxSize,
 					  yInd - halfBoxSize: yInd - halfBoxSize + boxSize, zInd - halfBoxSize: zInd - halfBoxSize + boxSize];
 
 		# apply hann window
-		window_halfmap1 = window_halfmap1 * hannWindow;
-		window_halfmap2 = window_halfmap2 * hannWindow;
+		windowHalfmap1 = windowHalfmap1 * hannWindow;
+		windowHalfmap2 = windowHalfmap2 * hannWindow;
 
-		res, _, _, _, _, _ , tmpPermutedCorCoeffs = FSC(window_halfmap1, window_halfmap2, None, apix, cutoff, numAsymUnits, True, False, None);
+		res, _, _, _, _, _ , tmpPermutedCorCoeffs = FSC(windowHalfmap1, windowHalfmap2, None, apix, cutoff, numAsymUnits, True, False, None);
 
 		if i == 0:
 			#initialize the array of correlation coefficients
@@ -630,7 +630,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 	y = np.linspace(1, 10, locRes.shape[1]);
 	z = np.linspace(1, 10, locRes.shape[2]);
 
-	my_interpolating_function = RegularGridInterpolator((x, y, z), locRes, method='linear')
+	myInterpolatingFunction = RegularGridInterpolator((x, y, z), locRes, method='linear')
 
 	xNew = np.linspace(1, 10, sizeMap[0]);
 	yNew = np.linspace(1, 10, sizeMap[1]);
@@ -638,7 +638,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 
 	xInd, yInd, zInd = np.meshgrid(xNew, yNew, zNew, indexing='ij', sparse=True);
 
-	localRes = my_interpolating_function((xInd, yInd, zInd));
+	localRes = myInterpolatingFunction((xInd, yInd, zInd));
 
 	localRes[mask <= 0.99] = 0.0;
 

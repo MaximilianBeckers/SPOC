@@ -79,27 +79,29 @@ def main():
 	else:
 		wn = 20;
 
-
 	#handle step size for local FSC
 	if args.stepSize is None:
 		stepSize = 2;
 	else:
 		stepSize = int(args.stepSize);
 
+	if not args.localResolutions:
+		if args.numAsymUnits is not None:
 
-	if args.numAsymUnits is not None:
-
-		numAsymUnits = args.numAsymUnits;
-		print('Using user provided number of asymmetric units, given as {:d}'.format(numAsymUnits));
-	else:
-		if args.symmetry is not None:
-
-			numAsymUnits = FSCutil.getNumAsymUnits(args.symmetry);
-			print('Using provided ' + args.symmetry + ' symmetry. Number of asymmetric units: {:d}'.format(numAsymUnits));
+			numAsymUnits = args.numAsymUnits;
+			print('Using user provided number of asymmetric units, given as {:d}'.format(numAsymUnits));
 		else:
-			numAsymUnits = 1;
-			print('Using C1 symmetry. Number of asymmetric units: {:d}'.format(numAsymUnits));
+			if args.symmetry is not None:
 
+				numAsymUnits = FSCutil.getNumAsymUnits(args.symmetry);
+				print('Using provided ' + args.symmetry + ' symmetry. Number of asymmetric units: {:d}'.format(numAsymUnits));
+			else:
+				numAsymUnits = 1;
+				print('Using C1 symmetry. Number of asymmetric units: {:d}'.format(numAsymUnits));
+	else:
+		#if local resolutions are calculated, no symmetry correction needed
+		print('Calculating local resolutions. No symmetry correction necessary.');
+		numAsymUnits = 1.0;
 
 	#make the mask
 	print("Using a circular mask ...");
