@@ -1,7 +1,7 @@
 # Author: Maximilian Beckers, EMBL Heidelberg, Sachse Group (2019)
 
 # import some stuff
-from FSCUtil import FSCutil
+from FSCUtil import FSCutil, localResolutions
 from confidenceMapUtil import FDRutil
 import numpy as np
 import argparse, os, sys
@@ -146,7 +146,7 @@ def main():
 	#*******************************************
 	else:
 		FSCcutoff = 0.5;
-		localResMap = FSCutil.localResolutions(halfMap1Data, halfMap2Data, wn, stepSize, FSCcutoff, apix, numAsymUnits,
+		localResMap = localResolutions.localResolutions(halfMap1Data, halfMap2Data, wn, stepSize, FSCcutoff, apix, numAsymUnits,
 											   maskData);
 
 		#write the local resolution map

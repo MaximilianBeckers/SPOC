@@ -179,7 +179,7 @@ def main():
 		locScaleMapMRC.voxel_size = apix;
 		locScaleMapMRC.close();
 
-	if (locScaleMap is not None) | (locFiltMap is not None):
+	"""if (locScaleMap is not None) | (locFiltMap is not None):
 		meanMapMRC = mrcfile.new(splitFilename[0] + '_mean.mrc', overwrite=True);
 		mean = np.float32(mean);
 		meanMapMRC.set_data(mean);
@@ -190,7 +190,7 @@ def main():
 		var = np.float32(var);
 		varMapMRC.set_data(var);
 		varMapMRC.voxel_size = apix;
-		varMapMRC.close();
+		varMapMRC.close();"""
 
 
 	#write the confidence Maps
