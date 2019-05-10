@@ -80,12 +80,13 @@ def localFiltration(map, locResMap, apix, localVariance, windowSize, boxCoord, E
 		
 		#get indices of voxels with the current resolution	
 		indices = np.where(locResMapData == tmpRes);
-	
+
 		if (indices[0].size == 0):
 			#this resolution is obviously not in the map, so skip
 			counter = counter + 1;
 			continue;
-		elif round(tmpRes,3) == round(limRes,3):
+		elif math.fabs(tmpRes - limRes) < 0.0000001:
+			print("hurz");
 			xInd, yInd, zInd = indices[0], indices[1], indices[2];
 			
 			#do local filtration
