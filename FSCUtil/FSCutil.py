@@ -214,7 +214,7 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 			pVals[1] = 0.0;
 
 	# do FDR control of p-Values
-	qVals_FDR = FDRutil.pAdjust(pVals, 'BH');
+	qVals_FDR = FDRutil.pAdjust(pVals, 'BY');
 	qVals_FWER = FDRutil.pAdjust(pVals, 'Holm')
 
 	tmpFSC = np.copy(FSC);

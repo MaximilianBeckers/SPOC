@@ -119,9 +119,9 @@ def main():
 		# write the FSC
 		FSCutil.writeFSC(res, FSC, percentCutoffs, qValsFDR);
 		
-		if resolution < 5.0:
+		if resolution < 8.0:
 			#estimate b-factor and sharpen the map
-			bFactor = FSCutil.estimateBfactor(0.5*(halfMap1Data+halfMap2Data), apix, resolution, maskBFactor);
+			bFactor = FSCutil.estimateBfactor(0.5*(halfMap1Data+halfMap2Data), resolution, apix, maskBFactor);
 
 			if args.bFactor is not None:
 				bFactor = args.bFactor;
