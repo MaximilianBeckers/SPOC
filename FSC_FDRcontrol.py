@@ -125,7 +125,7 @@ def main():
 
 			if args.bFactor is not None:
 				bFactor = args.bFactor;
-				print('Using a user-specified B-factor of {:.2f} for map sharpening'.format(bFactor));
+				print('Using a user-specified B-factor of {:.2f} for map sharpening'.format(-bFactor));
 			else:
 				print('Using a B-factor of {:.2f} for map sharpening.'.format(-bFactor));
 
