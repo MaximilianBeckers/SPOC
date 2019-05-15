@@ -276,7 +276,7 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 
 
 	if verbose:
-		print('Resolution at ' + repr(cutoff) + ' FSC threshold: ' + repr(round(resolution, 2)));
+		print('Resolution at a unmasked ' + repr(cutoff) + ' FSC threshold: ' + repr(round(resolution, 2)));
 		print('Resolution at 1 % FDR: ' + repr(round(resolution_FDR, 2)) + ' Angstrom');
 		#print('Resolution at 0.01 % FDR: ' + repr(round(resolution_FDR01, 2)) + ' Angstrom');
 		#print('Resolution at 1 % FWER: ' + repr(round(resolution_FWER, 2)) + ' Angstrom');
