@@ -113,11 +113,11 @@ def main():
 	#*******************************************
 
 	if not args.localResolutions:
-		res, FSC, percentCutoffs, qValsFWER, qValsFDR, resolution, _ = FSCutil.FSC(halfMap1Data, halfMap2Data,
+		res, FSC, percentCutoffs, pValues, qValsFDR, resolution, _ = FSCutil.FSC(halfMap1Data, halfMap2Data,
 																					  maskData, apix, 0.143,
 																					  numAsymUnits, False, True, None);
 		# write the FSC
-		FSCutil.writeFSC(res, FSC, percentCutoffs, qValsFDR);
+		FSCutil.writeFSC(res, FSC, qValsFDR, pValues);
 		
 		if resolution < 8.0:
 			#estimate b-factor and sharpen the map

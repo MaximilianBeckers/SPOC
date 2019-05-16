@@ -127,6 +127,8 @@ def estimateBfactor(map, resolution, apix, maskData):
 
 	#make Guinier plot
 	plt.plot(resSquared, lnF, label="Guinier Plot", linewidth=1.5);
+	plt.xlabel("1/resolution^2 [1/A^2]");
+	plt.ylabel("log(|F|)");
 	plt.savefig("GuinierPlot.pdf", dpi=300);
 	plt.close();
 
@@ -281,7 +283,7 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 		#print('Resolution at 0.01 % FDR: ' + repr(round(resolution_FDR01, 2)) + ' Angstrom');
 		#print('Resolution at 1 % FWER: ' + repr(round(resolution_FWER, 2)) + ' Angstrom');
 
-	return res, FSC, percentCutoffs, qVals_FWER, qVals_FDR, resolution_FDR, tmpPermutedCorCoeffs;
+	return res, FSC, percentCutoffs, pVals, qVals_FDR, resolution_FDR, tmpPermutedCorCoeffs;
 
 #--------------------------------------------------------
 def correlationCoefficient(sample1, sample2):
@@ -403,7 +405,7 @@ def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
 	return pValue, percentCutoffs, threeSigma, threeSigmaCorr, permutedCorCoeffs;
 
 #--------------------------------------------------------
-def writeFSC(resolutions, FSC, percentCutoffs, qValuesFDR):
+def writeFSC(resolutions, FSC, qValuesFDR, pValues):
 
 	#*******************************
 	#******* write FSC plots *******
@@ -411,14 +413,13 @@ def writeFSC(resolutions, FSC, percentCutoffs, qValuesFDR):
 
 	plt.plot(resolutions, FSC, label="FSC", linewidth=1.5);
 
-	#plot percent cutoffs
-	#for i in range(percentCutoffs.shape[1]):
-		#plt.plot(resolutions[0:], percentCutoffs[0:, i], linewidth = 0.5, color='g');
-
 	#threshold the adjusted pValues
 	qValuesFDR[qValuesFDR<=0.01] = 0.0;
+	pValues[pValues<=0.01] = 0.0;
 
-	plt.plot(resolutions[0:][qValuesFDR==0.0], qValuesFDR[qValuesFDR==0.0]-0.05, 'xb', label="sign. at 1% FDR");
+	plt.plot(resolutions[0:][qValuesFDR==0.0], qValuesFDR[qValuesFDR==0.0]-0.05, 'xr', label="sign. at 1% FDR");
+	#plt.plot(resolutions[0:][pValues==0.0], pValues[pValues==0.0]-0.1, 'xb', label="sign. at 1%");
+
 	plt.axhline(0.5, linewidth = 0.5, color = 'r');
 	plt.axhline(0.143, linewidth = 0.5, color = 'r');
 	plt.axhline(0.0, linewidth = 0.5, color = 'b');
