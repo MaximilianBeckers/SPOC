@@ -3,7 +3,7 @@ from FSCUtil import FSCutil
 from confidenceMapUtil import FDRutil
 from scipy.interpolate import RegularGridInterpolator
 
-
+#------------------------------------------------------------
 def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsymUnits, mask):
 	# ********************************************
 	# ****** calculate local resolutions by ******
@@ -88,8 +88,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 	print("Do local FSC calculations ...");
 	calcInd = 0;
 	iInd = 0;
-	jInd = 0;
-	kInd = 0;
+
 	for i in range(boxSize, boxSize + sizeMap[0], stepSize):
 		jInd = 0;
 		for j in range(boxSize, boxSize + sizeMap[1], stepSize):

@@ -1,16 +1,12 @@
 from confidenceMapUtil import FDRutil
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 import numpy as np
-import argparse, os, sys
-import subprocess
+import sys
 import math
-import gc
-import os.path
-from time import sleep
+import pyfftw
 
 
-#Author: Maximilian Beckers, EMBL Heidelberg, Sachse Group (2017)
+#Author: Maximilian Beckers, EMBL Heidelberg, Sachse Group (2019)
 
 
 #------------------------------------------------------------------------------------------------------
@@ -61,7 +57,8 @@ def localFiltration(map, locResMap, apix, localVariance, windowSize, boxCoord, E
 	noiseMapData = np.random.normal(initMean, math.sqrt(initVar), (100, 100, 100));
 
 	#do FFT of the respective map
-	mapFFT = np.fft.rfftn(map);
+	fftObject = pyfftw.builders.rfftn(map);
+	mapFFT = fftObject();
 
 	#get frequency map
 	frequencyMap = FDRutil.calculate_frequency_map(map);
@@ -86,7 +83,6 @@ def localFiltration(map, locResMap, apix, localVariance, windowSize, boxCoord, E
 			counter = counter + 1;
 			continue;
 		elif math.fabs(tmpRes - limRes) < 0.0000001:
-			print("hurz");
 			xInd, yInd, zInd = indices[0], indices[1], indices[2];
 			
 			#do local filtration

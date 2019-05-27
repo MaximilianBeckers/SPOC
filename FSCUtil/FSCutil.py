@@ -3,7 +3,8 @@ from confidenceMapUtil import FDRutil
 import matplotlib.pyplot as plt
 import math
 import sys
-
+import pyfftw
+import multiprocessing
 
 #-----------------------------------------------------
 def calculate_frequency_map(map):
@@ -100,23 +101,19 @@ def estimateBfactor(map, resolution, apix, maskData):
 	freqMap = calculate_frequency_map(map);
 	freqMap = freqMap/float(apix);
 
-	FFTmap = np.fft.rfftn(map*maskData);
+	#do FFT
+	numCores = multiprocessing.cpu_count();
+	fftObject = pyfftw.builders.rfftn(maskData, threads=numCores);
+	FFTmap = fftObject(map*maskData);
 
 	res = np.fft.rfftfreq(sizeMap[0], 1.0);
 	res = res / float(apix);
-	numRes = res.shape[0];
-	resSpacing = (res[1] - res[0]) / 2.0;
 
 	resSquared = res*res;
-	lnF = np.copy(resSquared);
 
-	#generate data for guinier plot
-	for i in range(numRes):
-
-		tmpRes = res[i];
-		rotAvgStrucFac = np.mean(np.absolute(FFTmap[((tmpRes - resSpacing) < freqMap) & (freqMap <= (tmpRes + resSpacing))]));
-
-		lnF[i] = np.log(rotAvgStrucFac);
+	#get rotationally averaged power spectrum
+	F = getRotAvgStucFac(res, freqMap, FFTmap);
+	lnF = np.log(F);
 
 	#do linear regression alpha+beta*x for resolutions better than 10 Angstroem
 	subset_lnF = lnF[(res>(1.0/10.0)) & (res<(1.0/float(resolution)))];
@@ -136,6 +133,22 @@ def estimateBfactor(map, resolution, apix, maskData):
 	print(output);
 
 	return -4.0*bFactor;
+
+#------------------------------------------------------
+def getRotAvgStucFac(res, freqMap, FFTmap):
+
+	numRes = res.shape[0];
+	resSpacing = (res[1] - res[0]) / 2.0;
+	F = np.copy(res);
+
+	#generate data for guinier plot
+	for i in range(numRes):
+
+		tmpRes = res[i];
+		rotAvgStrucFac = np.mean(np.absolute(FFTmap[((tmpRes - resSpacing) < freqMap) & (freqMap <= (tmpRes + resSpacing))]));
+		F[i] = rotAvgStrucFac;
+
+	return F;
 
 #--------------------------------------------------------
 def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verbose, permutedCorCoeffs):
@@ -157,9 +170,11 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 	freqMap = calculate_frequency_map(halfMap1);
 	freqMap = freqMap/float(apix);
 
-	#fourier transform the maps
-	fft_half1 = np.fft.rfftn(halfMap1);
-	fft_half2 = np.fft.rfftn(halfMap2);
+	#do fourier transforms
+	fftObject_half1 = pyfftw.builders.rfftn(halfMap1);
+	fftObject_half2 = pyfftw.builders.rfftn(halfMap2);
+	fft_half1 = fftObject_half1(halfMap1);
+	fft_half2 = fftObject_half2(halfMap2);
 
 	sizeMap = halfMap1.shape;
 
@@ -276,14 +291,14 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 	except:
 		resolution_FDR01 = 2.0*apix;
 
-
 	if verbose:
 		print('Resolution at a unmasked ' + repr(cutoff) + ' FSC threshold: ' + repr(round(resolution, 2)));
-		print('Resolution at 1 % FDR: ' + repr(round(resolution_FDR, 2)) + ' Angstrom');
+		print('Resolution at 1 % FDR-FSC: ' + repr(round(resolution_FDR, 2)) + ' Angstrom');
 		#print('Resolution at 0.01 % FDR: ' + repr(round(resolution_FDR01, 2)) + ' Angstrom');
 		#print('Resolution at 1 % FWER: ' + repr(round(resolution_FWER, 2)) + ' Angstrom');
 
 	return res, FSC, percentCutoffs, pVals, qVals_FDR, resolution_FDR, tmpPermutedCorCoeffs;
+
 
 #--------------------------------------------------------
 def correlationCoefficient(sample1, sample2):
@@ -301,6 +316,7 @@ def correlationCoefficient(sample1, sample2):
 		FSC = 0.0;
 
 	return FSC;
+
 
 #--------------------------------------------------------
 def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
@@ -326,7 +342,6 @@ def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
 	trueFSC = correlationCoefficient(sample1, sample2);
 
 	numPermutations = np.min((math.factorial(numSamples), 1000));
-	permutedCorCoeffs = np.zeros(numPermutations);
 	corrCoeff = np.zeros(numPermutations);
 
 	#set random seed
@@ -344,35 +359,9 @@ def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
 	tmpFSCdenominator = np.sqrt(np.sum(2.0 * np.square(np.absolute(tmpSample1))) * 2.0 * np.sum(np.square(np.absolute(tmpSample2))));
 	tmpSample1ComplexConj = np.conj(tmpSample1);
 	tmpSample1 = 0; #free memory
-	
-	prevPValue = 0.0;
-	for i in range(numPermutations):
 
-		permutedSample2 = np.random.permutation(tmpSample2);
-		#tmpCorCoeff = (np.sum((tmpSample1 * np.conj(permutedSample2)) + (tmpSample1ComplexConj * permutedSample2)));
-		
-		summand = tmpSample1ComplexConj * permutedSample2;
-		tmpCorCoeff = np.sum(np.conj(summand) + summand);
-
-		permutedCorCoeffs[i] = np.real(tmpCorCoeff);
-
-		pValueCheckInterval = 100;
-		if (i%pValueCheckInterval == 0) & (i>0):
-			#calculate temporary p-value
-			tmpPermutedCorCoeffs = np.real(permutedCorCoeffs[(i-pValueCheckInterval):i])/np.real(tmpFSCdenominator);		
-		
-			#calculate the pValue
-			extremeCorCoeff = tmpPermutedCorCoeffs[tmpPermutedCorCoeffs>trueFSC];
-			numExtreme = extremeCorCoeff.shape[0];
-			newPValue = numExtreme/float(pValueCheckInterval);
-			
-			#if p-value accuracy is high enough, stop permutations
-			if (newPValue - prevPValue) < 0.01:
-				permutedCorCoeffs = permutedCorCoeffs[:(i+1)];
-				numPermutations = i + 1;
-				break;	
-
-			prevPValue = newPValue;		
+	#do the actual permutations
+	permutedCorCoeffs, numPermutations = doPermutations(tmpSample2, tmpSample1ComplexConj, numPermutations, tmpFSCdenominator, trueFSC);
 
 	permutedCorCoeffs = np.real(permutedCorCoeffs)/np.real(tmpFSCdenominator);
 
@@ -404,6 +393,43 @@ def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
 
 	return pValue, percentCutoffs, threeSigma, threeSigmaCorr, permutedCorCoeffs;
 
+
+#--------------------------------------------------------
+def doPermutations(tmpSample2, tmpSample1ComplexConj, numPermutations, tmpFSCdenominator, trueFSC):
+
+	prevPValue = 0.0;
+	permutedCorCoeffs = np.zeros(numPermutations);
+	for i in range(numPermutations):
+
+		permutedSample2 = np.random.permutation(tmpSample2);
+
+		summand = tmpSample1ComplexConj * permutedSample2;
+		tmpCorCoeff = np.sum(np.conj(summand) + summand);
+
+		permutedCorCoeffs[i] = np.real(tmpCorCoeff);
+
+		pValueCheckInterval = 200;
+		if (i%pValueCheckInterval == 0) & (i>0):
+			#calculate temporary p-value
+			#tmpPermutedCorCoeffs = np.real(permutedCorCoeffs[(i-pValueCheckInterval):i])/np.real(tmpFSCdenominator);
+			tmpPermutedCorCoeffs = np.real(permutedCorCoeffs[:i]) / np.real(tmpFSCdenominator);
+
+			#calculate the pValue
+			extremeCorCoeff = tmpPermutedCorCoeffs[tmpPermutedCorCoeffs>trueFSC];
+			numExtreme = extremeCorCoeff.shape[0];
+			#newPValue = numExtreme/float(pValueCheckInterval);
+			newPValue = numExtreme / float(i);
+
+			# if p-value accuracy is high enough, stop permutations
+			if (newPValue - prevPValue) < 0.001:
+				permutedCorCoeffs = permutedCorCoeffs[:(i+1)];
+				numPermutations = i + 1;
+				break;
+
+			prevPValue = newPValue;
+
+	return permutedCorCoeffs, numPermutations;
+
 #--------------------------------------------------------
 def writeFSC(resolutions, FSC, qValuesFDR, pValues):
 
@@ -431,6 +457,7 @@ def writeFSC(resolutions, FSC, qValuesFDR, pValues):
 	plt.savefig('FSC.png', dpi=300);
 	plt.close();
 
+
 #-------------------------------------------------------
 def roundMapToVectorElements(map, apix): 
 	
@@ -457,6 +484,7 @@ def roundMapToVectorElements(map, apix):
 			map[(map>lower) & (map<=upper)] = 1.0/(res[i]);
 		
 	return map
+
 
 #-------------------------------------------------------
 def getNumAsymUnits(symmetry):

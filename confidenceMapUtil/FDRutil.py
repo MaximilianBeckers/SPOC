@@ -1,11 +1,11 @@
 import numpy as np
-import subprocess
 import math
-import gc
 import os
 import sys
+import multiprocessing
+import pyfftw
 
-#Author: Maximilian Beckers, EMBL Heidelberg, Sachse Group
+#Author: Maximilian Beckers, EMBL Heidelberg, Sachse Group (2019)
 
 #-------------------------------------------------------------------------------------
 def estimateNoiseFromMap(map, windowSize, boxCoord):
@@ -560,24 +560,35 @@ def lowPassFilter(mapFFT, frequencyMap, cutoff, shape):
 	#**********************************
 
 	sizeMap = mapFFT.shape;
+
+	#get number of cpus
+	numCores = multiprocessing.cpu_count();
 	
 	#do filtering of the map
 	filterMap = tanh_filter(frequencyMap, cutoff);
 	filteredftMap = filterMap*mapFFT;
 	
-	#do ifft and get real parts
-	filteredMap = np.fft.irfftn(filteredftMap, shape);
+	#do iverse FFT
+	fftObject = pyfftw.builders.irfftn(filteredftMap, shape, threads = numCores);
+	filteredMap = fftObject();
+
 	filteredMap = np.real(filteredMap);
+
 	return filteredMap;
 
 #---------------------------------------------------------------------------------
 def sharpenMap(map, Bfactor, apix, resolution):
 
+	#get number of cpus
+	numCores = multiprocessing.cpu_count();
+
 	frequencyMap = calculate_frequency_map(map);
 	frequencyMap = frequencyMap;
 	res_cutoff = apix/resolution;
 
-	mapFFT = np.fft.rfftn(map);
+	#do Fourier transform of map
+	fftObject = pyfftw.builders.rfftn(map, threads = numCores);
+	mapFFT = fftObject();
 
 	# do filtering of the map
 	tmpFreqMap = np.copy(frequencyMap);
