@@ -7,6 +7,7 @@ import numpy as np
 import argparse, os, sys
 import os.path
 import time
+import math
 import mrcfile
 
 # *************************************************************
@@ -58,6 +59,9 @@ def main():
 	halfMap1Data = np.copy(halfMap1.data);
 	halfMap2Data = np.copy(halfMap2.data);
 
+	#get size of map
+	sizeMap = halfMap2Data.shape;
+
 	#set pixel size
 	apix = float(halfMap1.voxel_size.x);
 	if args.apix is not None:
@@ -81,9 +85,12 @@ def main():
 
 	#handle step size for local FSC
 	if args.stepSize is None:
-		stepSize = 2;
+		stepSize = float(sizeMap[0]*sizeMap[1]*sizeMap[2])/300000.0;
+		stepSize = max(int(math.floor(stepSize**(1.0/3.0))),1);
 	else:
 		stepSize = int(args.stepSize);
+
+	print("Using a step size of {:d} voxel. If you prefer another one, please specify with -step.".format(stepSize));
 
 	if not args.localResolutions:
 		if args.numAsymUnits is not None:

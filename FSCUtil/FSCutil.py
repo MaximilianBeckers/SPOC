@@ -202,7 +202,7 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 
 		FSC[i] = correlationCoefficient(resShell_half1, resShell_half2);
 
-		if (permutedCorCoeffs is not None):
+		if (permutedCorCoeffs is not None): #for local resolution estimation
 			tmpCorCoeffs = permutedCorCoeffs[i];
 			pVals[i] = (tmpCorCoeffs[tmpCorCoeffs > FSC[i]].shape[0])/(float(tmpCorCoeffs.shape[0]));
 			tmpPermutedCorCoeffs = None;
@@ -398,6 +398,43 @@ def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
 def doPermutations(tmpSample2, tmpSample1ComplexConj, numPermutations, tmpFSCdenominator, trueFSC):
 
 	prevPValue = 0.0;
+	permutedCorCoeffs = np.zeros(0);
+	itNumPermutations = 200;
+
+	if numPermutations<1000: #for the first resolutions shells no p-value convergence test
+
+		tmpPermutedCorCoeffs = generatePermutations(numPermutations, tmpSample1ComplexConj, tmpSample2);
+		permutedCorCoeffs = np.append(permutedCorCoeffs, tmpPermutedCorCoeffs);
+
+	else: #check convergence of p-values every 200 permutations
+
+		numChecks = int(numPermutations/float(itNumPermutations));
+
+		for i in range(numChecks):
+
+			tmpPermutedCorCoeffs = generatePermutations(itNumPermutations, tmpSample1ComplexConj, tmpSample2);
+			permutedCorCoeffs = np.append(permutedCorCoeffs, tmpPermutedCorCoeffs);
+
+			#calculate temporary p-value
+			tmpPermutedCorCoeffs = np.real(permutedCorCoeffs) / np.real(tmpFSCdenominator);
+
+			#calculate the pValue
+			extremeCorCoeff = tmpPermutedCorCoeffs[tmpPermutedCorCoeffs>trueFSC];
+			numExtreme = extremeCorCoeff.shape[0];
+			newPValue = numExtreme / float(tmpPermutedCorCoeffs.size);
+
+			# if p-value accuracy is high enough, stop permutations
+			if (newPValue - prevPValue) < 0.001:
+				numPermutations = (i + 1)*itNumPermutations;
+				break;
+
+			prevPValue = newPValue;
+
+	return permutedCorCoeffs, numPermutations;
+
+#-------------------------------------------------------
+def generatePermutations(numPermutations, tmpSample1ComplexConj, tmpSample2):
+
 	permutedCorCoeffs = np.zeros(numPermutations);
 	for i in range(numPermutations):
 
@@ -408,27 +445,7 @@ def doPermutations(tmpSample2, tmpSample1ComplexConj, numPermutations, tmpFSCden
 
 		permutedCorCoeffs[i] = np.real(tmpCorCoeff);
 
-		pValueCheckInterval = 200;
-		if (i%pValueCheckInterval == 0) & (i>0):
-			#calculate temporary p-value
-			#tmpPermutedCorCoeffs = np.real(permutedCorCoeffs[(i-pValueCheckInterval):i])/np.real(tmpFSCdenominator);
-			tmpPermutedCorCoeffs = np.real(permutedCorCoeffs[:i]) / np.real(tmpFSCdenominator);
-
-			#calculate the pValue
-			extremeCorCoeff = tmpPermutedCorCoeffs[tmpPermutedCorCoeffs>trueFSC];
-			numExtreme = extremeCorCoeff.shape[0];
-			#newPValue = numExtreme/float(pValueCheckInterval);
-			newPValue = numExtreme / float(i);
-
-			# if p-value accuracy is high enough, stop permutations
-			if (newPValue - prevPValue) < 0.001:
-				permutedCorCoeffs = permutedCorCoeffs[:(i+1)];
-				numPermutations = i + 1;
-				break;
-
-			prevPValue = newPValue;
-
-	return permutedCorCoeffs, numPermutations;
+	return permutedCorCoeffs;
 
 #--------------------------------------------------------
 def writeFSC(resolutions, FSC, qValuesFDR, pValues):
