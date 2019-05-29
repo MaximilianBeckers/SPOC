@@ -1,0 +1,54 @@
+	for i in range(boxSize, boxSize + sizeMap[0], stepSize):
+
+
+		tmpLocRes = partialInnerLoop(i, iInd);
+
+
+		"""tmpLocRes = runInnerLoops(i, iInd, paddedMask, paddedHalfMap1, paddedHalfMap2, boxSize, sizeMap, stepSize, halfBoxSize,
+					  hannWindow, apix, cutoff, numAsymUnits, permutedCorCoeffs);"""
+		locRes = locRes + tmpLocRes;
+
+		calcInd = calcInd + 1;
+		progress = calcInd / float(numCalculations);
+		if calcInd % (int(numCalculations / 20.0)) == 0:
+			output = "%.1f" % (progress * 100) + "% finished ...";
+			print(output);
+
+		iInd = iInd + 1;
+
+		"""jInd = 0;
+		for j in range(boxSize, boxSize + sizeMap[1], stepSize):
+			kInd = 0;
+			for k in range(boxSize, boxSize + sizeMap[2], stepSize):
+
+				if paddedMask[i, j, k] > 0.99:
+					window_halfmap1 = paddedHalfMap1[i - halfBoxSize: i - halfBoxSize + boxSize,
+									  j - halfBoxSize: j - halfBoxSize + boxSize,
+									  k - halfBoxSize: k - halfBoxSize + boxSize];
+					window_halfmap2 = paddedHalfMap2[i - halfBoxSize: i - halfBoxSize + boxSize,
+									  j - halfBoxSize: j - halfBoxSize + boxSize,
+									  k - halfBoxSize: k - halfBoxSize + boxSize];
+
+					# apply hann window
+					window_halfmap1 = window_halfmap1 * hannWindow;
+					window_halfmap2 = window_halfmap2 * hannWindow;
+
+					_, _, _, _, _, tmpRes, _ = FSCutil.FSC(window_halfmap1, window_halfmap2, None, apix, cutoff,
+														   numAsymUnits,
+														   True, False, permutedCorCoeffs);
+
+					locRes[iInd, jInd, kInd] = tmpRes;
+				else:
+					locRes[iInd, jInd, kInd] = 0.0;
+
+				calcInd = calcInd + 1;
+				kInd = kInd + 1;
+
+				# print output
+				progress = calcInd / float(numCalculations);
+				if calcInd % (int(numCalculations / 20.0)) == 0:
+					output = "%.1f" % (progress * 100) + "% finished ...";
+					print(output);
+
+			jInd = jInd + 1;
+		iInd = iInd + 1;"""

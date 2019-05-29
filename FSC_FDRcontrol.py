@@ -90,8 +90,6 @@ def main():
 	else:
 		stepSize = int(args.stepSize);
 
-	print("Using a step size of {:d} voxel. If you prefer another one, please specify with -step.".format(stepSize));
-
 	if not args.localResolutions:
 		if args.numAsymUnits is not None:
 
@@ -107,6 +105,7 @@ def main():
 				print('Using C1 symmetry. Number of asymmetric units: {:d}'.format(numAsymUnits));
 	else:
 		#if local resolutions are calculated, no symmetry correction needed
+		print( "Using a step size of {:d} voxel. If you prefer another one, please specify with -step.".format(stepSize));
 		print('Calculating local resolutions. No symmetry correction necessary.');
 		numAsymUnits = 1.0;
 
