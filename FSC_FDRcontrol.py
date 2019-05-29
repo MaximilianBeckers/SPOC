@@ -86,7 +86,7 @@ def main():
 	#handle step size for local FSC
 	if args.stepSize is None:
 		stepSize = float(sizeMap[0]*sizeMap[1]*sizeMap[2])/300000.0;
-		stepSize = max(int(math.floor(stepSize**(1.0/3.0))),1);
+		stepSize = max(int(math.ceil(stepSize**(1.0/3.0))),1);
 	else:
 		stepSize = int(args.stepSize);
 
