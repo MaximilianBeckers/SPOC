@@ -147,7 +147,8 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 	return localRes;
 
 #-----------------------------------------------------------------
-def loopOverMap(iSeq, queue,  paddedMask, paddedHalfMap1, paddedHalfMap2, boxSize, sizeMap, stepSize, halfBoxSize, hannWindow, apix, cutoff, numAsymUnits, permutedCorCoeffs):
+def loopOverMap(iSeq, queue,  paddedMask, paddedHalfMap1, paddedHalfMap2, boxSize, sizeMap,
+				stepSize, halfBoxSize, hannWindow, apix, cutoff, numAsymUnits, permutedCorCoeffs):
 
 	# ********************************************
 	# ******* iterate over the map and calc ******
