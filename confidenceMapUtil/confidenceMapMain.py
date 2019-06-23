@@ -103,13 +103,13 @@ def calculateConfidenceMap(em_map, apix, noiseBox, testProc, ecdf, lowPassFilter
 
 		FDRutil.checkNormality(em_map, wn, boxCoord);
 		em_map, mean, var, ECDF = mapUtil.localFiltration(em_map, locResMap, apix, True, wn, boxCoord, ECDF);
-		locFiltMap = FDRutil.studentizeMap(em_map, mean, var);
-		#locFiltMap = em_map;
+		#locFiltMap = FDRutil.studentizeMap(em_map, mean, var);
+		locFiltMap = em_map;
 		locScaleMap = None;
 	else:
 		em_map, mean, var, ECDF = locscaleUtil.launch_amplitude_scaling(em_map, modelMap, apix, stepSize, wn_locscale, wn, method, locResMap, boxCoord, mpi, ECDF );
-		locScaleMap = FDRutil.studentizeMap(em_map, mean, var);
-		#locScaleMap = em_map;
+		#locScaleMap = FDRutil.studentizeMap(em_map, mean, var);
+		locScaleMap = em_map;
 		locFiltMap = None;
 
 	# calculate the qMap

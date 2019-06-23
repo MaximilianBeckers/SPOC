@@ -299,7 +299,6 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 
 	return res, FSC, percentCutoffs, pVals, qVals_FDR, resolution_FDR, tmpPermutedCorCoeffs;
 
-
 #--------------------------------------------------------
 def correlationCoefficient(sample1, sample2):
 
@@ -384,7 +383,7 @@ def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
 	percentCutoffs[percentCutoffs<=0] = 1.0;
 
 	#if sample size of FSC values is low, use a 0.9 FSC threshold	
-	if maxSamples < 7.0:
+	if maxSamples < 10:
 		if trueFSC < 0.9:
 			pValue = 1.0;
 		else:

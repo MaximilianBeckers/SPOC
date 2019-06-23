@@ -75,6 +75,17 @@ def main():
 	splitFilename = os.path.splitext(os.path.basename(args.halfmap1));
 	outputFilename_LocRes = splitFilename[0] + "_localResolutions.mrc";
 	outputFilename_PostProcessed = splitFilename[0] + "_postProcessed.mrc";
+	outputFilename_averagedHalfmaps = splitFilename[0] + "_avg.mrc";
+
+	# write the map averages
+	#mapAvg = 0.5 * (halfMap2Data + halfMap1Data);
+	# write the post-processed map
+	#avgMRC = mrcfile.new(outputFilename_averagedHalfmaps, overwrite=True);
+	#mapAvg = np.float32(mapAvg);
+	#avgMRC.set_data(mapAvg);
+	#avgMRC.voxel_size = apix;
+	#avgMRC.close();
+
 
 	#handle window size for local FSC
 	if args.window_size is not None:
