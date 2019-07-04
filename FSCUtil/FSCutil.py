@@ -384,14 +384,14 @@ def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
 
 	#if sample size of FSC values is low, use a 0.9 FSC threshold	
 	if maxSamples < 10:
-		if trueFSC < 0.9:
+		if trueFSC < 0.75:
 			pValue = 1.0;
 		else:
 			pValue = 0.0;
+
 		percentCutoffs = np.ones(percentCutoffs.shape);
 
 	return pValue, percentCutoffs, threeSigma, threeSigmaCorr, permutedCorCoeffs;
-
 
 #--------------------------------------------------------
 def doPermutations(tmpSample2, tmpSample1ComplexConj, numPermutations, tmpFSCdenominator, trueFSC):

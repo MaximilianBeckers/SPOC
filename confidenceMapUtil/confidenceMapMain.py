@@ -131,22 +131,23 @@ def calculateConfidenceMap(em_map, apix, noiseBox, testProc, ecdf, lowPassFilter
 		em_map = locFiltMap;
 	if locScaleMap is not None:
 		em_map = locScaleMap;
-		
-	# threshold the qMap
-	binMap1 = FDRutil.binarizeMap(qMap, 0.01);
-	binMap001 = FDRutil.binarizeMap(qMap, 0.0001);
 
-	# apply the thresholded qMapFDR to data
-	maskedMap1 = np.multiply(binMap1, np.copy(em_map));
-	minMapValue = np.min(maskedMap1[np.nonzero(maskedMap1)]);
-	output = "Calculated map threshold: %.3f" %minMapValue + " at a " + error + " of " + repr(1) + "%.";
-	print(output);
+	if ((locResMap is None) & (modelMap is None)):
+		# threshold the qMap
+		binMap1 = FDRutil.binarizeMap(qMap, 0.01);
+		binMap001 = FDRutil.binarizeMap(qMap, 0.0001);
 
-	# apply the thresholded qMapFWER to data
-	maskedMap001 = np.multiply(binMap001, np.copy(em_map));
-	minMapValue = np.min(maskedMap001[np.nonzero(maskedMap001)]);
-	output = "Calculated map threshold: %.3f" %minMapValue + " at a " + error + " of " + repr(0.01) + "%.";
-	print(output);
+		# apply the thresholded qMapFDR to data
+		maskedMap1 = np.multiply(binMap1, np.copy(em_map));
+		minMapValue = np.min(maskedMap1[np.nonzero(maskedMap1)]);
+		output = "Calculated map threshold: %.3f" %minMapValue + " at a " + error + " of " + repr(1) + "%.";
+		print(output);
+
+		# apply the thresholded qMapFWER to data
+		maskedMap001 = np.multiply(binMap001, np.copy(em_map));
+		minMapValue = np.min(maskedMap001[np.nonzero(maskedMap001)]);
+		output = "Calculated map threshold: %.3f" %minMapValue + " at a " + error + " of " + repr(0.01) + "%.";
+		print(output);
 
 	# invert qMap for visualization tools
 	confidenceMap = np.subtract(1.0, qMap);

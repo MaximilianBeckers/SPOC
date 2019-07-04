@@ -52,10 +52,23 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 		yInd = np.random.randint(boxSize, sizeMap[1] + boxSize);
 		zInd = np.random.randint(boxSize, sizeMap[2] + boxSize);
 
-		while (paddedMask[xInd, yInd, zInd] < 0.1):
+		#xInd = np.random.randint(sizeMap[0]/2 - sizeMap[0]/8 + boxSize, sizeMap[0]/2 + sizeMap[0]/8 + boxSize);
+		#yInd = np.random.randint(sizeMap[1]/2 - sizeMap[1]/8 + boxSize, sizeMap[1]/2 + sizeMap[1]/8 + boxSize);
+		#zInd = np.random.randint(sizeMap[2]/2 - sizeMap[2]/8 + boxSize, sizeMap[2]/2 + sizeMap[2]/8 + boxSize);
+
+		while ((paddedMask[xInd, yInd, zInd] < 0.1) or (paddedHalfMap1[xInd, yInd, zInd]<=0.0) or (paddedHalfMap2[xInd, yInd, zInd]<=0.0)):
+
+
 			xInd = np.random.randint(boxSize, sizeMap[0] + boxSize);
 			yInd = np.random.randint(boxSize, sizeMap[1] + boxSize);
 			zInd = np.random.randint(boxSize, sizeMap[2] + boxSize);
+
+			#xInd = np.random.randint(sizeMap[0] / 2 - sizeMap[0] / 8 + boxSize,
+			#						 sizeMap[0] / 2 + sizeMap[0] / 8 + boxSize);
+			#yInd = np.random.randint(sizeMap[1] / 2 - sizeMap[1] / 8 + boxSize,
+			#						 sizeMap[1] / 2 + sizeMap[1] / 8 + boxSize);
+			#zInd = np.random.randint(sizeMap[2] / 2 - sizeMap[2] / 8 + boxSize,
+			#						 sizeMap[2] / 2 + sizeMap[2] / 8 + boxSize);
 
 		windowHalfmap1 = paddedHalfMap1[xInd - halfBoxSize: xInd - halfBoxSize + boxSize,
 						 yInd - halfBoxSize: yInd - halfBoxSize + boxSize,

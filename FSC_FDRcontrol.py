@@ -27,6 +27,8 @@ cmdl_parser.add_argument('-p', '--apix', metavar="apix", type=float, required=Fa
 						 help='pixel Size of input map');
 cmdl_parser.add_argument('-localResolutions', action='store_true', default=False,
 						 help='Flag for calculation of local resolution');
+cmdl_parser.add_argument('-lowRes', type=float, required=False,
+						 help='set lowest resolution');
 cmdl_parser.add_argument('-w', '--window_size', metavar="windowSize", type=float, required=False,
 						 help="Input window size for local Amplitude scaling and background noise estimation");
 cmdl_parser.add_argument('-stepSize', '--stepSize', metavar="stepSize_locScale", type=int, required=False,
@@ -165,6 +167,11 @@ def main():
 		FSCcutoff = 0.5;
 		localResMap = localResolutions.localResolutions(halfMap1Data, halfMap2Data, wn, stepSize, FSCcutoff, apix, numAsymUnits,
 											   maskData);
+
+		# set lowest resolution if wished
+		if args.lowRes is not None:
+			lowRes = args.lowRes;
+			localResMap[localResMap>lowRes] = lowRes;
 
 		#write the local resolution map
 		localResMapMRC = mrcfile.new(outputFilename_LocRes, overwrite=True);
