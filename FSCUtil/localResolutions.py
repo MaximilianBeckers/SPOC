@@ -58,6 +58,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 		#yInd = np.random.randint(sizeMap[1]/2 - sizeMap[1]/8 + boxSize, sizeMap[1]/2 + sizeMap[1]/8 + boxSize);
 		#zInd = np.random.randint(sizeMap[2]/2 - sizeMap[2]/8 + boxSize, sizeMap[2]/2 + sizeMap[2]/8 + boxSize);
 
+		#generate new locations until one is found in the mask
 		while ((paddedMaskPermutation[xInd, yInd, zInd] < 0.5)):
 
 			xInd = np.random.randint(boxSize, sizeMap[0] + boxSize);
@@ -71,6 +72,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 			#zInd = np.random.randint(sizeMap[2] / 2 - sizeMap[2] / 8 + boxSize,
 			#						 sizeMap[2] / 2 + sizeMap[2] / 8 + boxSize);
 
+		#get windowed parts
 		windowHalfmap1 = paddedHalfMap1[xInd - halfBoxSize: xInd - halfBoxSize + boxSize,
 						 yInd - halfBoxSize: yInd - halfBoxSize + boxSize,
 						 zInd - halfBoxSize: zInd - halfBoxSize + boxSize];
@@ -116,7 +118,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 	lenInt = int(math.ceil(len(iIterable)/float(numCores)));
 	queue = multiprocessing.Queue();
 
-	#start the parallel processes
+	#start process for each core and run in parallel
 	for i in range(numCores):
 
 		#split the iterable
@@ -131,11 +133,9 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 		proc = multiprocessing.Process(target=partialLoopOverMap, args=(seq, queue,));
 		proc.start();
 
-
 	#addition of indiviual local resolution maps to produce the final one
 	for i in range(numCores):
 		locRes = locRes + queue.get();
-
 
 	# *************************************
 	# ********** do interpolation *********
@@ -204,7 +204,6 @@ def loopOverMap(iSeq, queue,  paddedMask, paddedHalfMap1, paddedHalfMap2, boxSiz
 					locRes[iInd, jInd, kInd] = tmpRes;
 
 				else:
-
 					locRes[iInd, jInd, kInd] = 0.0;
 
 				kInd = kInd + 1;

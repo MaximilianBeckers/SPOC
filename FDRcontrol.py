@@ -192,7 +192,6 @@ def main():
 		varMapMRC.voxel_size = apix;
 		varMapMRC.close();"""
 
-
 	#write the confidence Maps
 	confidenceMapMRC = mrcfile.new(splitFilename[0] + '_confidenceMap.mrc', overwrite=True);
 	confidenceMap = np.float32(confidenceMap);

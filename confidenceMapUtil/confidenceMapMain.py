@@ -126,7 +126,7 @@ def calculateConfidenceMap(em_map, apix, noiseBox, testProc, ecdf, lowPassFilter
 		qMap = FDRutil.calcQMap(em_map, mean, var, ECDF, wn, boxCoord, circularMaskData, 'BY', testProc);
 		error = 'FDR';
 
-
+	#if local processing wished, write that out
 	if locFiltMap is not None:
 		em_map = locFiltMap;
 	if locScaleMap is not None:
@@ -154,5 +154,6 @@ def calculateConfidenceMap(em_map, apix, noiseBox, testProc, ecdf, lowPassFilter
 
 	# apply lowpass-filtered mask to maps
 	confidenceMap = np.multiply(confidenceMap, circularMaskData);
+
 
 	return confidenceMap, locFiltMap, locScaleMap, mean, var;

@@ -40,7 +40,8 @@ cmdl_parser.add_argument('-numAsymUnits', '--numAsymUnits', type=int, required=F
 cmdl_parser.add_argument('-bFactor', '--bFactor', type=float, required=False,
 						 help="B-Factor for sharpening of the map")
 cmdl_parser.add_argument('-mask', '--mask', type=str, required=False,
-						 help="Mask for local map-model FSC")
+						 help="Mask for local map-model FSC calculation.")
+
 # ************************************************************
 # ********************** main function ***********************
 # ************************************************************
@@ -80,22 +81,12 @@ def main():
 	outputFilename_PostProcessed = splitFilename[0] + "_postProcessed.mrc";
 	outputFilename_averagedHalfmaps = splitFilename[0] + "_avg.mrc";
 
-	# write the map averages
-	#mapAvg = 0.5 * (halfMap2Data + halfMap1Data);
-	# write the post-processed map
-	#avgMRC = mrcfile.new(outputFilename_averagedHalfmaps, overwrite=True);
-	#mapAvg = np.float32(mapAvg);
-	#avgMRC.set_data(mapAvg);
-	#avgMRC.voxel_size = apix;
-	#avgMRC.close();
-
-
 	#handle window size for local FSC
 	if args.window_size is not None:
 		wn = args.window_size;
 		wn = int(wn);
 	else:
-		wn = 20;
+		wn = 20; #default is 20 pixels
 
 	#handle step size for local FSC
 	if args.stepSize is None:
@@ -125,8 +116,8 @@ def main():
 
 	#make the mask
 	print("Using a circular mask ...");
-	maskData = FSCutil.makeCircularMask(halfMap1Data, (np.min(halfMap1Data.shape) / 2.0) - 4.0);
-	maskBFactor = FSCutil.makeCircularMask(halfMap1Data, (np.min(halfMap1Data.shape) / 4.0) - 4.0);
+	maskData = FSCutil.makeCircularMask(halfMap1Data, (np.min(halfMap1Data.shape) / 2.0) - 4.0); #circular mask
+	maskBFactor = FSCutil.makeCircularMask(halfMap1Data, (np.min(halfMap1Data.shape) / 4.0) - 4.0); #smaller circular mask for B-factor estimation
 
 	#*******************************************
 	#********** no local Resolutions ***********
@@ -140,6 +131,7 @@ def main():
 		FSCutil.writeFSC(res, FSC, qValsFDR, pValues);
 		
 		if resolution < 8.0:
+
 			#estimate b-factor and sharpen the map
 			bFactor = FSCutil.estimateBfactor(0.5*(halfMap1Data+halfMap2Data), resolution, apix, maskBFactor);
 
@@ -165,6 +157,7 @@ def main():
 	#********* calc local Resolutions **********
 	#*******************************************
 	else:
+
 		FSCcutoff = 0.5;
 
 		#set mask for locations of permutations

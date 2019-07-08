@@ -95,6 +95,10 @@ def makeCircularMask(map, sphereRadius):
 #---------------------------------------------------------------------------------
 def estimateBfactor(map, resolution, apix, maskData):
 
+	#*************************************
+	#***** estimate B-factor falloff *****
+	#*************************************
+
 	sizeMap = map.shape;
 
 	#calculate the frequency map
@@ -136,6 +140,11 @@ def estimateBfactor(map, resolution, apix, maskData):
 
 #------------------------------------------------------
 def getRotAvgStucFac(res, freqMap, FFTmap):
+
+	#********************************************
+	#******* calculate rotationally avg. ********
+	#************* power spectrum ***************
+	#********************************************
 
 	numRes = res.shape[0];
 	resSpacing = (res[1] - res[0]) / 2.0;
@@ -219,6 +228,7 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 		
 	pVals[0] = 0.0;
 
+	#for the first two resolutions shells, use a 0.9 FSC criterion, as permutation not reliabele for such small sample sizes
 	if localRes:
 		if FSC[0] < 0.9:
 			pVals[0] = 1.0;
@@ -232,7 +242,6 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 
 	# do FDR control of p-Values
 	qVals_FDR = FDRutil.pAdjust(pVals, 'BY');
-	qVals_FWER = FDRutil.pAdjust(pVals, 'Holm')
 
 	tmpFSC = np.copy(FSC);
 	tmpFSC[tmpFSC > cutoff] = 1.0;
@@ -257,7 +266,6 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 	threshQVals = np.copy(qVals_FDR);
 	threshQVals[threshQVals <= 0.01] = 0.0; #signal
 	threshQVals[threshQVals > 0.01] = 1.0 #no signal
-	threshQValsFDR = threshQVals;
 
 	try:
 		resolution_FDR = np.min(np.argwhere(threshQVals)) - 1;
@@ -272,24 +280,6 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 				resolution_FDR = float(1.0/tmpFreq);
 	except:
 		resolution_FDR = 2.0*apix;
-
-	threshQVals = np.copy(qVals_FDR);
-	threshQVals[threshQVals <= 0.0001] = 0.0; #signal
-	threshQVals[threshQVals > 0.0001] = 1.0 #no signal
-
-	try:
-		resolution_FDR01 = np.min(np.argwhere(threshQVals)) - 1;
-
-		if resolution_FDR01 < 0:
-			resolution_FDR01 = 0.0;
-		else:
-			if res[int(resolution_FDR01)] == 0.0:
-				resolution_FDR01 = 0.0;
-			else:
-				tmpFreq = res[int(resolution_FDR01)] #+ (res[resolution_FDR + 1] - res[resolution_FDR]) / 2.0;
-				resolution_FDR01= float(1.0/tmpFreq);
-	except:
-		resolution_FDR01 = 2.0*apix;
 
 	if verbose:
 		print('Resolution at a unmasked ' + repr(cutoff) + ' FSC threshold: ' + repr(round(resolution, 2)));
@@ -315,7 +305,6 @@ def correlationCoefficient(sample1, sample2):
 		FSC = 0.0;
 
 	return FSC;
-
 
 #--------------------------------------------------------
 def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
@@ -398,7 +387,7 @@ def doPermutations(tmpSample2, tmpSample1ComplexConj, numPermutations, tmpFSCden
 
 	prevPValue = 0.0;
 	permutedCorCoeffs = np.zeros(0);
-	itNumPermutations = 200;
+	itNumPermutations = 200;  #check p-value every 200 permutations
 
 	if numPermutations<1000: #for the first resolutions shells no p-value convergence test
 
@@ -473,7 +462,6 @@ def writeFSC(resolutions, FSC, qValuesFDR, pValues):
 	plt.savefig('FSC.png', dpi=300);
 	plt.close();
 
-
 #-------------------------------------------------------
 def roundMapToVectorElements(map, apix): 
 	
@@ -500,7 +488,6 @@ def roundMapToVectorElements(map, apix):
 			map[(map>lower) & (map<=upper)] = 1.0/(res[i]);
 		
 	return map
-
 
 #-------------------------------------------------------
 def getNumAsymUnits(symmetry):
