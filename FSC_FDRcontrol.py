@@ -39,7 +39,8 @@ cmdl_parser.add_argument('-numAsymUnits', '--numAsymUnits', type=int, required=F
 						 help="number of asymmtetric units for correction of symmetry effects")
 cmdl_parser.add_argument('-bFactor', '--bFactor', type=float, required=False,
 						 help="B-Factor for sharpening of the map")
-
+cmdl_parser.add_argument('-mask', '--mask', type=str, required=False,
+						 help="Mask for local map-model FSC")
 # ************************************************************
 # ********************** main function ***********************
 # ************************************************************
@@ -165,8 +166,16 @@ def main():
 	#*******************************************
 	else:
 		FSCcutoff = 0.5;
+
+		#set mask for locations of permutations
+		if args.mask is not None:
+			maskPermuation = mrcfile.open(args.mask, mode='r');
+			maskPermutationData = np.copy(maskPermuation.data);
+		else:
+			maskPermutationData = maskData;
+
 		localResMap = localResolutions.localResolutions(halfMap1Data, halfMap2Data, wn, stepSize, FSCcutoff, apix, numAsymUnits,
-											   maskData);
+											   maskData, maskPermutationData);
 
 		# set lowest resolution if wished
 		if args.lowRes is not None:

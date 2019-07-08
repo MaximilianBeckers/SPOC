@@ -7,7 +7,7 @@ from confidenceMapUtil import FDRutil
 from scipy.interpolate import RegularGridInterpolator
 
 #------------------------------------------------------------
-def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsymUnits, mask):
+def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsymUnits, mask, maskPermutation):
 
 	# ********************************************
 	# ****** calculate local resolutions by ******
@@ -25,12 +25,14 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 	paddedHalfMap1 = np.zeros((sizeMap[0] + 2 * boxSize, sizeMap[1] + 2 * boxSize, sizeMap[2] + 2 * boxSize));
 	paddedHalfMap2 = np.zeros((sizeMap[0] + 2 * boxSize, sizeMap[1] + 2 * boxSize, sizeMap[2] + 2 * boxSize));
 	paddedMask = np.zeros((sizeMap[0] + 2 * boxSize, sizeMap[1] + 2 * boxSize, sizeMap[2] + 2 * boxSize));
+	paddedMaskPermutation = np.zeros((sizeMap[0] + 2 * boxSize, sizeMap[1] + 2 * boxSize, sizeMap[2] + 2 * boxSize));
 
 	paddedHalfMap1[boxSize: boxSize + sizeMap[0], boxSize: boxSize + sizeMap[1],
 	boxSize: boxSize + sizeMap[2]] = halfMap1;
 	paddedHalfMap2[boxSize: boxSize + sizeMap[0], boxSize: boxSize + sizeMap[1],
 	boxSize: boxSize + sizeMap[2]] = halfMap2;
 	paddedMask[boxSize: boxSize + sizeMap[0], boxSize: boxSize + sizeMap[1], boxSize: boxSize + sizeMap[2]] = mask;
+	paddedMaskPermutation[boxSize: boxSize + sizeMap[0], boxSize: boxSize + sizeMap[1], boxSize: boxSize + sizeMap[2]] = maskPermutation;
 
 	halfBoxSize = int(boxSize / 2.0);
 
@@ -56,8 +58,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 		#yInd = np.random.randint(sizeMap[1]/2 - sizeMap[1]/8 + boxSize, sizeMap[1]/2 + sizeMap[1]/8 + boxSize);
 		#zInd = np.random.randint(sizeMap[2]/2 - sizeMap[2]/8 + boxSize, sizeMap[2]/2 + sizeMap[2]/8 + boxSize);
 
-		while ((paddedMask[xInd, yInd, zInd] < 0.1) or (paddedHalfMap1[xInd, yInd, zInd]<=0.0) or (paddedHalfMap2[xInd, yInd, zInd]<=0.0)):
-
+		while ((paddedMaskPermutation[xInd, yInd, zInd] < 0.5)):
 
 			xInd = np.random.randint(boxSize, sizeMap[0] + boxSize);
 			yInd = np.random.randint(boxSize, sizeMap[1] + boxSize);
@@ -155,7 +156,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 
 	localRes = myInterpolatingFunction((xInd, yInd, zInd));
 
-	localRes[mask <= 0.99] = 0.0;
+	localRes[mask <= 0.1] = 0.0;
 
 	return localRes;
 
