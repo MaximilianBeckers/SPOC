@@ -128,7 +128,7 @@ def estimateBfactor(map, resolution, apix, maskData):
 
 	#make Guinier plot
 	plt.plot(resSquared, lnF, label="Guinier Plot", linewidth=1.5);
-	plt.xlabel("1/resolution^2 [1/A^2]");
+	plt.xlabel("1/resolution^2 [1/A^2] ");
 	plt.ylabel("log(|F|)");
 	plt.savefig("GuinierPlot.pdf", dpi=300);
 	plt.close();
