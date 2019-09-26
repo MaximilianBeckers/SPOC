@@ -67,15 +67,27 @@ def makeHannWindow(map):
 	#some initialization
 	mapSize = map.shape;
 
-	x = np.linspace(-math.floor(mapSize[0]/2.0), -math.floor(mapSize[0]/2.0) + mapSize[0], mapSize[0]);
-	y = np.linspace(-math.floor(mapSize[1]/2.0), -math.floor(mapSize[1]/2.0) + mapSize[1], mapSize[1]);
-	z = np.linspace(-math.floor(mapSize[2]/2.0), -math.floor(mapSize[2]/2.0) + mapSize[2], mapSize[2]);
+	if map.ndim == 3:
+		x = np.linspace(-math.floor(mapSize[0]/2.0), -math.floor(mapSize[0]/2.0) + mapSize[0], mapSize[0]);
+		y = np.linspace(-math.floor(mapSize[1]/2.0), -math.floor(mapSize[1]/2.0) + mapSize[1], mapSize[1]);
+		z = np.linspace(-math.floor(mapSize[2]/2.0), -math.floor(mapSize[2]/2.0) + mapSize[2], mapSize[2]);
 
-	xx, yy, zz = np.meshgrid(x, y, z, indexing='ij');
+		xx, yy, zz = np.meshgrid(x, y, z, indexing='ij');
 
-	radiusMap = np.sqrt(xx**2 + yy**2 + zz**2);
+		radiusMap = np.sqrt(xx**2 + yy**2 + zz**2);
 
-	windowMap = 0.5*(1.0 - np.cos((2.0*np.pi*radiusMap/map.shape[0]) + np.pi));
+		windowMap = 0.5*(1.0 - np.cos((2.0*np.pi*radiusMap/map.shape[0]) + np.pi));
+
+	elif map.ndim == 2:
+		x = np.linspace(-math.floor(mapSize[0]/2.0), -math.floor(mapSize[0]/2.0) + mapSize[0], mapSize[0]);
+		y = np.linspace(-math.floor(mapSize[1]/2.0), -math.floor(mapSize[1]/2.0) + mapSize[1], mapSize[1]);
+
+		xx, yy = np.meshgrid(x, y, indexing='ij');
+
+		radiusMap = np.sqrt(xx**2 + yy**2);
+
+		windowMap = 0.5*(1.0 - np.cos((2.0*np.pi*radiusMap/map.shape[0]) + np.pi));
+
 
 	windowMap[radiusMap>(mapSize[0]/2.0)] = 0.0;
 
