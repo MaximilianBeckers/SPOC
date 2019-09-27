@@ -44,7 +44,7 @@ def calculate_frequency_map(map):
 	elif map.ndim == 2:
 		# calc frequency for each voxel
 		freqi = np.fft.fftfreq(sizeMap[0], 1.0);
-		freqj = np.fft.fftfreq(sizeMap[1], 1.0);
+		freqj = np.fft.rfftfreq(sizeMap[1], 1.0);
 
 		sizeFFT = np.array([freqi.size, freqj.size]);
 		FFT = np.zeros(sizeFFT);
@@ -160,7 +160,7 @@ def getRotAvgStucFac(res, freqMap, FFTmap):
 	return F;
 
 #--------------------------------------------------------
-def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verbose, permutedCorCoeffs):
+def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verbose, permutedCorCoeffs, SMLM):
 
 	#********************************************
 	#***** function that calculates the FSC *****
@@ -168,6 +168,8 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 
 	if localRes:
 		maskCoeff = 0.23;
+	elif SMLM:
+		maskCoeff = 0.6;
 	else:
 		maskCoeff = 0.7;
 

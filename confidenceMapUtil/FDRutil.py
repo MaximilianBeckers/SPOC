@@ -68,6 +68,7 @@ def makeHannWindow(map):
 	mapSize = map.shape;
 
 	if map.ndim == 3:
+
 		x = np.linspace(-math.floor(mapSize[0]/2.0), -math.floor(mapSize[0]/2.0) + mapSize[0], mapSize[0]);
 		y = np.linspace(-math.floor(mapSize[1]/2.0), -math.floor(mapSize[1]/2.0) + mapSize[1], mapSize[1]);
 		z = np.linspace(-math.floor(mapSize[2]/2.0), -math.floor(mapSize[2]/2.0) + mapSize[2], mapSize[2]);
@@ -79,6 +80,7 @@ def makeHannWindow(map):
 		windowMap = 0.5*(1.0 - np.cos((2.0*np.pi*radiusMap/map.shape[0]) + np.pi));
 
 	elif map.ndim == 2:
+
 		x = np.linspace(-math.floor(mapSize[0]/2.0), -math.floor(mapSize[0]/2.0) + mapSize[0], mapSize[0]);
 		y = np.linspace(-math.floor(mapSize[1]/2.0), -math.floor(mapSize[1]/2.0) + mapSize[1], mapSize[1]);
 
@@ -87,7 +89,6 @@ def makeHannWindow(map):
 		radiusMap = np.sqrt(xx**2 + yy**2);
 
 		windowMap = 0.5*(1.0 - np.cos((2.0*np.pi*radiusMap/map.shape[0]) + np.pi));
-
 
 	windowMap[radiusMap>(mapSize[0]/2.0)] = 0.0;
 

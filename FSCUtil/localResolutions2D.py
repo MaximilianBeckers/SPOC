@@ -7,7 +7,7 @@ from confidenceMapUtil import FDRutil
 from scipy.interpolate import RegularGridInterpolator
 
 #------------------------------------------------------------
-def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsymUnits, mask, maskPermutation):
+def localResolutions2D(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsymUnits, mask, maskPermutation):
 
 	# ********************************************
 	# ****** calculate local resolutions by ******
@@ -18,21 +18,18 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 
 	sizeMap = halfMap1.shape;
 	locRes = np.zeros((len(range(boxSize, boxSize + sizeMap[0], stepSize)),
-					  len(range(boxSize, boxSize + sizeMap[1], stepSize)),
-					  len(range(boxSize, boxSize + sizeMap[2], stepSize))));
+					  len(range(boxSize, boxSize + sizeMap[1], stepSize))));
 
 	# pad the volumes
-	paddedHalfMap1 = np.zeros((sizeMap[0] + 2 * boxSize, sizeMap[1] + 2 * boxSize, sizeMap[2] + 2 * boxSize));
-	paddedHalfMap2 = np.zeros((sizeMap[0] + 2 * boxSize, sizeMap[1] + 2 * boxSize, sizeMap[2] + 2 * boxSize));
-	paddedMask = np.zeros((sizeMap[0] + 2 * boxSize, sizeMap[1] + 2 * boxSize, sizeMap[2] + 2 * boxSize));
-	paddedMaskPermutation = np.zeros((sizeMap[0] + 2 * boxSize, sizeMap[1] + 2 * boxSize, sizeMap[2] + 2 * boxSize));
+	paddedHalfMap1 = np.zeros((sizeMap[0] + 2 * boxSize, sizeMap[1] + 2 * boxSize));
+	paddedHalfMap2 = np.zeros((sizeMap[0] + 2 * boxSize, sizeMap[1] + 2 * boxSize));
+	paddedMask = np.zeros((sizeMap[0] + 2 * boxSize, sizeMap[1] + 2 * boxSize));
+	paddedMaskPermutation = np.zeros((sizeMap[0] + 2 * boxSize, sizeMap[1] + 2 * boxSize));
 
-	paddedHalfMap1[boxSize: boxSize + sizeMap[0], boxSize: boxSize + sizeMap[1],
-	boxSize: boxSize + sizeMap[2]] = halfMap1;
-	paddedHalfMap2[boxSize: boxSize + sizeMap[0], boxSize: boxSize + sizeMap[1],
-	boxSize: boxSize + sizeMap[2]] = halfMap2;
-	paddedMask[boxSize: boxSize + sizeMap[0], boxSize: boxSize + sizeMap[1], boxSize: boxSize + sizeMap[2]] = mask;
-	paddedMaskPermutation[boxSize: boxSize + sizeMap[0], boxSize: boxSize + sizeMap[1], boxSize: boxSize + sizeMap[2]] = maskPermutation;
+	paddedHalfMap1[boxSize: boxSize + sizeMap[0], boxSize: boxSize + sizeMap[1]] = halfMap1;
+	paddedHalfMap2[boxSize: boxSize + sizeMap[0], boxSize: boxSize + sizeMap[1]] = halfMap2;
+	paddedMask[boxSize: boxSize + sizeMap[0], boxSize: boxSize + sizeMap[1]] = mask;
+	paddedMaskPermutation[boxSize: boxSize + sizeMap[0], boxSize: boxSize + sizeMap[1]] = maskPermutation;
 
 	halfBoxSize = int(boxSize / 2.0);
 
@@ -40,7 +37,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 	hannWindow = FDRutil.makeHannWindow(np.zeros((boxSize, boxSize, boxSize)));
 
 	numCalculations = len(range(boxSize, boxSize + sizeMap[0], stepSize)) * len(
-		range(boxSize, boxSize + sizeMap[1], stepSize)) * len(range(boxSize, boxSize + sizeMap[0], stepSize));
+		range(boxSize, boxSize + sizeMap[1], stepSize));
 	print("Total number of calculations: " + repr(numCalculations));
 
 	# ****************************************************
@@ -52,18 +49,16 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 
 		xInd = np.random.randint(boxSize, sizeMap[0] + boxSize);
 		yInd = np.random.randint(boxSize, sizeMap[1] + boxSize);
-		zInd = np.random.randint(boxSize, sizeMap[2] + boxSize);
 
 		#xInd = np.random.randint(sizeMap[0]/2 - sizeMap[0]/8 + boxSize, sizeMap[0]/2 + sizeMap[0]/8 + boxSize);
 		#yInd = np.random.randint(sizeMap[1]/2 - sizeMap[1]/8 + boxSize, sizeMap[1]/2 + sizeMap[1]/8 + boxSize);
 		#zInd = np.random.randint(sizeMap[2]/2 - sizeMap[2]/8 + boxSize, sizeMap[2]/2 + sizeMap[2]/8 + boxSize);
 
 		#generate new locations until one is found in the mask
-		while ((paddedMaskPermutation[xInd, yInd, zInd] < 0.5)):
+		while ((paddedMaskPermutation[xInd, yInd] < 0.5)):
 
 			xInd = np.random.randint(boxSize, sizeMap[0] + boxSize);
 			yInd = np.random.randint(boxSize, sizeMap[1] + boxSize);
-			zInd = np.random.randint(boxSize, sizeMap[2] + boxSize);
 
 			#xInd = np.random.randint(sizeMap[0] / 2 - sizeMap[0] / 8 + boxSize,
 			#						 sizeMap[0] / 2 + sizeMap[0] / 8 + boxSize);
@@ -74,11 +69,9 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 
 		#get windowed parts
 		windowHalfmap1 = paddedHalfMap1[xInd - halfBoxSize: xInd - halfBoxSize + boxSize,
-						 yInd - halfBoxSize: yInd - halfBoxSize + boxSize,
-						 zInd - halfBoxSize: zInd - halfBoxSize + boxSize];
+						 yInd - halfBoxSize: yInd - halfBoxSize + boxSize];
 		windowHalfmap2 = paddedHalfMap2[xInd - halfBoxSize: xInd - halfBoxSize + boxSize,
-						 yInd - halfBoxSize: yInd - halfBoxSize + boxSize,
-						 zInd - halfBoxSize: zInd - halfBoxSize + boxSize];
+						 yInd - halfBoxSize: yInd - halfBoxSize + boxSize];
 
 		# apply hann window
 		windowHalfmap1 = windowHalfmap1 * hannWindow;
@@ -144,17 +137,15 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 	print("Interpolating local Resolutions ...");
 	x = np.linspace(1, 10, locRes.shape[0]);
 	y = np.linspace(1, 10, locRes.shape[1]);
-	z = np.linspace(1, 10, locRes.shape[2]);
 
 	myInterpolatingFunction = RegularGridInterpolator((x, y, z), locRes, method='linear')
 
 	xNew = np.linspace(1, 10, sizeMap[0]);
 	yNew = np.linspace(1, 10, sizeMap[1]);
-	zNew = np.linspace(1, 10, sizeMap[2]);
 
-	xInd, yInd, zInd = np.meshgrid(xNew, yNew, zNew, indexing='ij', sparse=True);
+	xInd, yInd = np.meshgrid(xNew, yNew, indexing='ij', sparse=True);
 
-	localRes = myInterpolatingFunction((xInd, yInd, zInd));
+	localRes = myInterpolatingFunction((xInd, yInd));
 
 	localRes[mask <= 0.1] = 0.0;
 
@@ -170,8 +161,7 @@ def loopOverMap(iSeq, queue,  paddedMask, paddedHalfMap1, paddedHalfMap2, boxSiz
 	# ********************************************
 
 	locRes = np.zeros((len(range(boxSize, boxSize + sizeMap[0], stepSize)),
-					   len(range(boxSize, boxSize + sizeMap[1], stepSize)),
-					   len(range(boxSize, boxSize + sizeMap[2], stepSize))));
+					   len(range(boxSize, boxSize + sizeMap[1], stepSize))));
 
 	for i in iSeq:
 
@@ -180,33 +170,25 @@ def loopOverMap(iSeq, queue,  paddedMask, paddedHalfMap1, paddedHalfMap2, boxSiz
 
 		for j in range(boxSize, boxSize + sizeMap[1], stepSize):
 
-			kInd = 0;
+			if paddedMask[i, j] > 0.99:
 
-			for k in range(boxSize, boxSize + sizeMap[2], stepSize):
+				window_halfmap1 = paddedHalfMap1[i - halfBoxSize: i - halfBoxSize + boxSize,
+									  j - halfBoxSize: j - halfBoxSize + boxSize];
+				window_halfmap2 = paddedHalfMap2[i - halfBoxSize: i - halfBoxSize + boxSize,
+									  j - halfBoxSize: j - halfBoxSize + boxSize];
 
-				if paddedMask[i, j, k] > 0.99:
+				# apply hann window
+				window_halfmap1 = window_halfmap1 * hannWindow;
+				window_halfmap2 = window_halfmap2 * hannWindow;
 
-					window_halfmap1 = paddedHalfMap1[i - halfBoxSize: i - halfBoxSize + boxSize,
-									  j - halfBoxSize: j - halfBoxSize + boxSize,
-									  k - halfBoxSize: k - halfBoxSize + boxSize];
-					window_halfmap2 = paddedHalfMap2[i - halfBoxSize: i - halfBoxSize + boxSize,
-									  j - halfBoxSize: j - halfBoxSize + boxSize,
-									  k - halfBoxSize: k - halfBoxSize + boxSize];
-
-					# apply hann window
-					window_halfmap1 = window_halfmap1 * hannWindow;
-					window_halfmap2 = window_halfmap2 * hannWindow;
-
-					_, _, _, _, _, tmpRes, _ = FSCutil.FSC(window_halfmap1, window_halfmap2, None, apix, cutoff,
+				_, _, _, _, _, tmpRes, _ = FSCutil.FSC(window_halfmap1, window_halfmap2, None, apix, cutoff,
 														   numAsymUnits,
 														   True, False, permutedCorCoeffs, False);
 
-					locRes[iInd, jInd, kInd] = tmpRes;
+				locRes[iInd, jInd] = tmpRes;
 
-				else:
-					locRes[iInd, jInd, kInd] = 0.0;
-
-				kInd = kInd + 1;
+			else:
+				locRes[iInd, jInd] = 0.0;
 
 			jInd = jInd + 1;
 
