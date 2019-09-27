@@ -30,9 +30,9 @@ cmdl_parser.add_argument('-localResolutions', action='store_true', default=False
 cmdl_parser.add_argument('-lowRes', type=float, required=False,
 						 help='set lowest resolution');
 cmdl_parser.add_argument('-w', '--window_size', metavar="windowSize", type=float, required=False,
-						 help="Input window size for local Amplitude scaling and background noise estimation");
+						 help="Input window size for local resolution estimation");
 cmdl_parser.add_argument('-stepSize', '--stepSize', metavar="stepSize_locScale", type=int, required=False,
-						 help="Voxels to skip for local amplitude scaling");
+						 help="Voxels to skip for local resolution estimation");
 cmdl_parser.add_argument('-symmetry', '--symmetry', type=str, required=False,
 						 help="symmetry for correction of symmetry effects")
 cmdl_parser.add_argument('-numAsymUnits', '--numAsymUnits', type=int, required=False,

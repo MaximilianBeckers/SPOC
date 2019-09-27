@@ -23,8 +23,14 @@ cmdl_parser.add_argument('-image1', '--image1', metavar="image_1.jpg", type=str,
 						 help='Input filename of image 1');
 cmdl_parser.add_argument('-image2', '--image2', metavar="image_2.jpg", type=str, required=False,
 						 help='Input filename of image 2');
-cmdl_parser.add_argument('-size', '--size', type=int, required=False,
+cmdl_parser.add_argument('-size', '--size', type=int, required=False, default=5000,
 						 help='size of image for binning the localizations (default: 5000)');
+cmdl_parser.add_argument('-localResolutions', '--localResolutions', type=bool, required=False,
+						 help='calculation of local resolutions', default=False);
+cmdl_parser.add_argument('-w', '--window_size', metavar="windowSize", type=int, required=False,
+						 help="Input window size for local resolution estimation (default: 50)", default=50);
+cmdl_parser.add_argument('-stepSize', '--stepSize', type=int, required=False,
+						 help="Pixels to skip for local resolution estimation (default: 5)", default=5);
 
 # ************************************************************
 # ********************** main function ***********************
@@ -42,8 +48,11 @@ def main():
 
 	if args.size is not None:
 		imageSize = args.size;
-	else:
-		imageSize = 5000;
+
+
+	if args.localResolutions:
+		stepSize = args.stepSize;
+		boxSize = args.window_size;
 
 	if args.localizations is not None:
 
