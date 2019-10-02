@@ -2,7 +2,7 @@ import numpy as np
 from scipy.stats import ttest_1samp
 import sys
 import matplotlib.pyplot as plt
-from FSCUtil import FSCutil
+from FSCUtil import FSCutil, localResolutions2D
 from confidenceMapUtil import FDRutil
 
 #****************************************************
@@ -12,6 +12,7 @@ class SMLM:
 	halfMap1 = [];
 	halfMap2 = [];
 	fullMap = [];
+	localResolutions = [];
 	filteredMap = [];
 	dimension = 0;
 	hannWindow = [];
@@ -69,6 +70,44 @@ class SMLM:
 		self.resVec = tmpResVec;
 		self.filterMap();
 		self.writeFSC();
+
+	#---------------------------------------------
+	def localResolution(self, embeddingData, image1, image2, size, stepSize, boxSize):
+
+		np.random.seed(3);
+
+		#****************************
+		#**** do two embeddings *****
+		#****************************
+		if embeddingData is not None:
+
+			#split the localizations randomly in 2 half sets
+			self.sizeMap = size;
+			numLocalizations = embeddingData.shape[0];
+			self.dimension = embeddingData.shape[1];
+			sizeHalfSet = int(numLocalizations/2);
+			permutedSequence = np.random.permutation(np.arange(numLocalizations));
+			self.embeddingsHalf1 = embeddingData[permutedSequence[0:sizeHalfSet], :];
+			self.embeddingsHalf2 = embeddingData[permutedSequence[sizeHalfSet:], :];
+			self.embedding = embeddingData;
+			self.make_half_maps();
+
+		#****************************
+		#***** use two images *******
+		#****************************
+		elif image1 is not None:
+
+			self.halfMap1  = image1;
+			self.halfMap2 = image2;
+
+		self.halfMap1 = self.halfMap1 + np.random.randn(self.halfMap1.shape[0],self.halfMap1.shape[0],self.halfMap1.shape[0])*0.01;
+		self.halfMap2 = self.halfMap2 + np.random.randn(self.halfMap2.shape[0],self.halfMap1.shape[0],self.halfMap1.shape[0])*0.01;
+		maskData = FSCutil.makeCircularMask(self.halfMap1, (np.min(self.halfMap1.shape) / 2.0) - 4.0);  # circular mask
+
+		self.fullMap = self.halfMap1 + self.halfMap2;
+		self.frequencyMap = FSCutil.calculate_frequency_map(self.halfMap1);
+
+		self.localResolutions = localResolutions2D.localResolutions2D(self.halfMap1, self.halfMap2, boxSize, stepSize, 0.143, self.apix, 1, maskData, maskData);
 
 	#---------------------------------------------
 	def make_half_maps(self):

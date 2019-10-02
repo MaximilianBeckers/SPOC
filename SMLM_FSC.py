@@ -25,8 +25,8 @@ cmdl_parser.add_argument('-image2', '--image2', metavar="image_2.jpg", type=str,
 						 help='Input filename of image 2');
 cmdl_parser.add_argument('-size', '--size', type=int, required=False, default=5000,
 						 help='size of image for binning the localizations (default: 5000)');
-cmdl_parser.add_argument('-localResolutions', '--localResolutions', type=bool, required=False,
-						 help='calculation of local resolutions', default=False);
+cmdl_parser.add_argument('-localResolutions', action='store_true', default=False,
+						 help='Flag for calculation of local resolution');
 cmdl_parser.add_argument('-w', '--window_size', metavar="windowSize", type=int, required=False,
 						 help="Input window size for local resolution estimation (default: 50)", default=50);
 cmdl_parser.add_argument('-stepSize', '--stepSize', type=int, required=False,
@@ -60,7 +60,11 @@ def main():
 		localizations = np.loadtxt(args.localizations, delimiter= ",", skiprows=1, usecols=(0, 1));
 
 		SMLMObject = SMLM.SMLM();
-		SMLMObject.resolution(localizations, None, None, imageSize);
+
+		if not args.localResolutions:
+			SMLMObject.resolution(localizations, None, None, imageSize);
+		else:
+			SMLMObject.localResolution(localizations, None, None, imageSize, stepSize, boxSize);
 
 	else:
 
@@ -73,7 +77,17 @@ def main():
 			image2 = ndimage.imread(args.image2);
 
 		SMLMObject = SMLM.SMLM();
-		SMLMObject.resolution(None, image1, image2, imageSize);
+
+		if not args.localResolutions:
+			SMLMObject.resolution(None, image1, image2, imageSize);
+		else:
+			SMLMObject.localResolution(None, image1, image2, imageSize, stepSize, boxSize);
+
+			#plot the local resolutions
+			plt.imshow(SMLMObject.localResolutions.T, cmap='hot', origin='lower')
+			plt.colorbar();
+			plt.savefig('heatMap_full.png', dpi=300);
+			plt.close();
 
 	#************************
 	#***** plot images ******
@@ -81,7 +95,7 @@ def main():
 
 	plt.imshow(SMLMObject.fullMap.T, cmap='hot', origin='lower')
 	plt.colorbar();
-	plt.savefig('heatMap_full_png', dpi=300);
+	plt.savefig('heatMap_full.png', dpi=300);
 	plt.close();
 
 	plt.imshow(SMLMObject.filteredMap.T, cmap='hot', origin='lower')
