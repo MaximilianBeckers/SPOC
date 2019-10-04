@@ -23,14 +23,16 @@ cmdl_parser.add_argument('-image1', '--image1', metavar="image_1.jpg", type=str,
 						 help='Input filename of image 1');
 cmdl_parser.add_argument('-image2', '--image2', metavar="image_2.jpg", type=str, required=False,
 						 help='Input filename of image 2');
-cmdl_parser.add_argument('-size', '--size', type=int, required=False, default=5000,
-						 help='size of image for binning the localizations (default: 5000)');
 cmdl_parser.add_argument('-localResolutions', action='store_true', default=False,
 						 help='Flag for calculation of local resolution');
 cmdl_parser.add_argument('-w', '--window_size', metavar="windowSize", type=int, required=False,
-						 help="Input window size for local resolution estimation (default: 50)", default=50);
+						 help="Input window size for local resolution estimation (default: 500)", default=500);
 cmdl_parser.add_argument('-stepSize', '--stepSize', type=int, required=False,
-						 help="Pixels to skip for local resolution estimation (default: 5)", default=5);
+						 help="Pixels to skip for local resolution estimation (default: 100)", default=100);
+cmdl_parser.add_argument('-lowRes', type=float, required=False,
+						 help='set lowest resolution');
+cmdl_parser.add_argument('-apix', type=float, required=True,
+						 help='set pixel size');
 
 # ************************************************************
 # ********************** main function ***********************
@@ -46,8 +48,6 @@ def main():
 	# get command line input
 	args = cmdl_parser.parse_args();
 
-	if args.size is not None:
-		imageSize = args.size;
 
 
 	if args.localResolutions:
@@ -57,14 +57,14 @@ def main():
 	if args.localizations is not None:
 
 		#read the localizations
-		localizations = np.loadtxt(args.localizations, delimiter= ",", skiprows=1, usecols=(0, 1));
+		localizations = np.loadtxt(args.localizations, delimiter= "	", skiprows=1, usecols=(4, 5));
 
 		SMLMObject = SMLM.SMLM();
 
 		if not args.localResolutions:
-			SMLMObject.resolution(localizations, None, None, imageSize);
+			SMLMObject.resolution(localizations, None, None, args.apix);
 		else:
-			SMLMObject.localResolution(localizations, None, None, imageSize, stepSize, boxSize);
+			SMLMObject.localResolution(localizations, None, None, args.apix, stepSize, boxSize);
 
 	else:
 
@@ -79,15 +79,10 @@ def main():
 		SMLMObject = SMLM.SMLM();
 
 		if not args.localResolutions:
-			SMLMObject.resolution(None, image1, image2, imageSize);
+			SMLMObject.resolution(None, image1, image2, args.apix);
 		else:
-			SMLMObject.localResolution(None, image1, image2, imageSize, stepSize, boxSize);
+			SMLMObject.localResolution(None, image1, image2, args.apix, stepSize, boxSize);
 
-			#plot the local resolutions
-			plt.imshow(SMLMObject.localResolutions.T, cmap='hot', origin='lower')
-			plt.colorbar();
-			plt.savefig('heatMap_full.png', dpi=300);
-			plt.close();
 
 	#************************
 	#***** plot images ******
@@ -98,11 +93,21 @@ def main():
 	plt.savefig('heatMap_full.png', dpi=300);
 	plt.close();
 
-	plt.imshow(SMLMObject.filteredMap.T, cmap='hot', origin='lower')
-	plt.colorbar();
-	plt.savefig('heatMap_filt.png', dpi=300);
-	plt.close();
+	#plt.imshow(SMLMObject.filteredMap.T, cmap='hot', origin='lower')
+	#plt.colorbar();
+	#plt.savefig('heatMap_filt.png', dpi=300);
+	#plt.close();
 
+	if args.localResolutions:
+
+		if args.lowRes is not None:  # if low-resolution bound is give, use it
+			SMLMObject.localResolutions[SMLMObject.localResolutions > args.lowRes] = args.lowRes;
+
+		# plot the local resolutions
+		plt.imshow(SMLMObject.localResolutions.T, cmap='hot', origin='lower');
+		plt.colorbar();
+		plt.savefig('localResolutions.png', dpi=300);
+		plt.close();
 
 if (__name__ == "__main__"):
 	main()

@@ -128,7 +128,7 @@ def main():
 																					  maskData, apix, 0.143,
 																					  numAsymUnits, False, True, None, False);
 		# write the FSC
-		FSCutil.writeFSC(res, FSC, qValsFDR, pValues);
+		FSCutil.writeFSC(res, FSC, qValsFDR, pValues, apix/resolution);
 		
 		if resolution < 8.0:
 

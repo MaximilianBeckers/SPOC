@@ -240,14 +240,14 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 		
 	pVals[0] = 0.0;
 
-	#for the first two resolutions shells, use a 0.9 FSC criterion, as permutation not reliabele for such small sample sizes
-	if localRes:
-		if FSC[0] < 0.9:
+	#for the first two resolutions shells, use a 0.75 FSC criterion for local resolutions, as permutation not reliabele for such small sample sizes
+	if localRes or SMLM:
+		if FSC[0] < 0.75:
 			pVals[0] = 1.0;
 		else:
 			pVals[0] = 0.0;
 		
-		if FSC[1] < 0.9:
+		if FSC[1] < 0.75:
 			pVals[1] = 1.0;
 		else:
 			pVals[1] = 0.0;
@@ -383,12 +383,13 @@ def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
 	percentCutoffs = np.array((tenPercentCutoff, fivePercentCutoff, onePercentCutoff, _onePercentCutoff));
 	percentCutoffs[percentCutoffs<=0] = 1.0;
 
-	#if sample size of FSC values is low, use a 0.9 FSC threshold	
+	#if sample size of FSC values is low, use a 0.75 FSC threshold
 	if maxSamples < 10:
 		if trueFSC < 0.75:
 			pValue = 1.0;
 		else:
 			pValue = 0.0;
+
 
 		percentCutoffs = np.ones(percentCutoffs.shape);
 
@@ -448,7 +449,7 @@ def generatePermutations(numPermutations, tmpSample1ComplexConj, tmpSample2):
 	return permutedCorCoeffs;
 
 #--------------------------------------------------------
-def writeFSC(resolutions, FSC, qValuesFDR, pValues):
+def writeFSC(resolutions, FSC, qValuesFDR, pValues, resolution):
 
 	#*******************************
 	#******* write FSC plots *******
@@ -466,6 +467,7 @@ def writeFSC(resolutions, FSC, qValuesFDR, pValues):
 	plt.axhline(0.5, linewidth = 0.5, color = 'r');
 	plt.axhline(0.143, linewidth = 0.5, color = 'r');
 	plt.axhline(0.0, linewidth = 0.5, color = 'b');
+	plt.axvline(1.0/resolution, linewidth = 0.5, color = 'b');
 	
 	plt.xlabel("1/resolution [1/A]");
 	plt.ylabel("FSC");

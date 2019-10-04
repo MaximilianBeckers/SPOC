@@ -4,6 +4,7 @@ import sys
 import matplotlib.pyplot as plt
 from FSCUtil import FSCutil, localResolutions2D
 from confidenceMapUtil import FDRutil
+import math
 
 #****************************************************
 class SMLM:
@@ -23,13 +24,14 @@ class SMLM:
 	qVals = [];
 	resolution = 0.0;
 	embeddings = [];
-	sizeMap = 0;
 
 
 	#---------------------------------------------
-	def resolution(self, embeddingData, image1, image2, size):
+	def resolution(self, embeddingData, image1, image2, apix):
 
 		np.random.seed(3);
+
+		self.apix = float(apix);
 
 		#****************************
 		#**** do two embeddings *****
@@ -37,7 +39,6 @@ class SMLM:
 		if embeddingData is not None:
 
 			#split the localizations randomly in 2 half sets
-			self.sizeMap = size;
 			numLocalizations = embeddingData.shape[0];
 			self.dimension = embeddingData.shape[1];
 			sizeHalfSet = int(numLocalizations/2);
@@ -72,17 +73,17 @@ class SMLM:
 		self.writeFSC();
 
 	#---------------------------------------------
-	def localResolution(self, embeddingData, image1, image2, size, stepSize, boxSize):
+	def localResolution(self, embeddingData, image1, image2, apix, stepSize, boxSize):
 
 		np.random.seed(3);
 
+		self.apix = float(apix);
 		#****************************
 		#**** do two embeddings *****
 		#****************************
 		if embeddingData is not None:
 
 			#split the localizations randomly in 2 half sets
-			self.sizeMap = size;
 			numLocalizations = embeddingData.shape[0];
 			self.dimension = embeddingData.shape[1];
 			sizeHalfSet = int(numLocalizations/2);
@@ -100,14 +101,16 @@ class SMLM:
 			self.halfMap1  = image1;
 			self.halfMap2 = image2;
 
-		self.halfMap1 = self.halfMap1 + np.random.randn(self.halfMap1.shape[0],self.halfMap1.shape[0],self.halfMap1.shape[0])*0.01;
-		self.halfMap2 = self.halfMap2 + np.random.randn(self.halfMap2.shape[0],self.halfMap1.shape[0],self.halfMap1.shape[0])*0.01;
-		maskData = FSCutil.makeCircularMask(self.halfMap1, (np.min(self.halfMap1.shape) / 2.0) - 4.0);  # circular mask
+		self.halfMap1 = self.halfMap1 + np.random.randn(self.halfMap1.shape[0], self.halfMap1.shape[1])*0.01;
+		self.halfMap2 = self.halfMap2 + np.random.randn(self.halfMap2.shape[0], self.halfMap1.shape[1])*0.01;
+
+		#maskData = FSCutil.makeCircularMask(self.halfMap1, (np.min(self.halfMap1.shape) / 2.0) - 4.0);  # circular mask
+		maskData = np.ones(self.halfMap1.shape);
 
 		self.fullMap = self.halfMap1 + self.halfMap2;
 		self.frequencyMap = FSCutil.calculate_frequency_map(self.halfMap1);
 
-		self.localResolutions = localResolutions2D.localResolutions2D(self.halfMap1, self.halfMap2, boxSize, stepSize, 0.143, self.apix, 1, maskData, maskData);
+		self.localResolutions = localResolutions2D.localResolutions2D(self.halfMap1, self.halfMap2, boxSize, stepSize, 0.5, self.apix, 1, maskData, maskData);
 
 	#---------------------------------------------
 	def make_half_maps(self):
@@ -117,9 +120,7 @@ class SMLM:
 		#*****************************************
 		if self.dimension == 2:
 
-			#initialize the half maps
-			tmpHalfMap1 = np.zeros((self.sizeMap, self.sizeMap));
-			tmpHalfMap2 = np.zeros((self.sizeMap, self.sizeMap));
+
 
 			#make the grid
 			minX = min(np.amin(self.embeddingsHalf1[:,0]), np.amin(self.embeddingsHalf2[:,0]));
@@ -127,11 +128,15 @@ class SMLM:
 			minY = min(np.amin(self.embeddingsHalf1[:,1]), np.amin(self.embeddingsHalf2[:,1]));
 			maxY = max(np.amax(self.embeddingsHalf1[:,1]), np.amax(self.embeddingsHalf2[:,1]));
 
-			spacingX = (maxX-minX)/float(self.sizeMap -1);
-			spacingY = (maxY-minY)/float(self.sizeMap -1);
+			numPixX = (maxX-minX)/float(self.apix);
+			numPixY = (maxY-minY)/float(self.apix);
 
-			spacing = max(spacingX, spacingY);
-			self.apix = spacing;
+			numPix = math.ceil(max(numPixX, numPixY));
+			print("Images will have a size of " + repr(numPix) + "^2 ...");
+
+			#initialize the half maps
+			tmpHalfMap1 = np.zeros((numPix, numPix));
+			tmpHalfMap2 = np.zeros((numPix, numPix));
 
 			half1 = self.embeddingsHalf1;
 			half2 = self.embeddingsHalf2;
@@ -141,7 +146,7 @@ class SMLM:
 			for i in range(half1.shape[0]):
 
 				#transform localization to the grid
-				indicesInGrid = np.floor((half1[i, :] - np.array([minX, minY]))/spacing);
+				indicesInGrid = np.floor((half1[i, :] - np.array([minX, minY]))/self.apix);
 				indicesInGrid = indicesInGrid.astype(int);
 				tmpHalfMap1[indicesInGrid[0], indicesInGrid[1]] = tmpHalfMap1[indicesInGrid[0], indicesInGrid[1]] + 1.0;
 
@@ -150,7 +155,7 @@ class SMLM:
 			for i in range(half2.shape[0]):
 
 				#transform localization to the grid
-				indicesInGrid = np.floor((half2[i, :] - np.array([minX, minY]))/spacing);
+				indicesInGrid = np.floor((half2[i, :] - np.array([minX, minY]))/self.apix);
 				indicesInGrid = indicesInGrid.astype(int);
 				tmpHalfMap2[indicesInGrid[0], indicesInGrid[1]] = tmpHalfMap2[indicesInGrid[0], indicesInGrid[1]] + 1.0;
 
@@ -159,10 +164,6 @@ class SMLM:
 		#*********************************************
 
 		elif self.dimension == 3:
-
-			# initialize the half maps
-			tmpHalfMap1 = np.zeros((self.sizeMap, self.sizeMap, self.sizeMap));
-			tmpHalfMap2 = np.zeros((self.sizeMap, self.sizeMap, self.sizeMap));
 
 			# make the grid
 			minX = min(np.amin(self.embeddingsHalf1[:, 0]), np.amin(self.embeddingsHalf2[:, 0]));
@@ -173,12 +174,15 @@ class SMLM:
 			maxZ = max(np.amax(self.embeddingsHalf1[:, 2]), np.amax(self.embeddingsHalf2[:, 2]));
 
 
-			spacingX = (maxX - minX) / float(self.sizeMap - 1);
-			spacingY = (maxY - minY) / float(self.sizeMap - 1);
-			spacingZ = (maxZ - minZ) / float(self.sizeMap - 1);
+			numPixX = (maxX - minX) / float(self.apix);
+			numPixY = (maxY - minY) / float(self.apix);
+			numPixZ = (maxZ - minZ) / float(self.apix);
 
-			spacing = max(spacingX, spacingY, spacingZ);
-			self.apix = spacing;
+			numPix = math.ceil(max(numPixX, numPixY, numPixZ));
+
+			# initialize the half maps
+			tmpHalfMap1 = np.zeros((numPix, numPix, numPix));
+			tmpHalfMap2 = np.zeros((numPix, numPix, numPix));
 
 			half1 = self.embeddingsHalf1;
 			half2 = self.embeddingsHalf2;
@@ -187,7 +191,7 @@ class SMLM:
 			# place localizations of HalfSet1
 			for i in range(half1.shape[0]):
 				# transform localization to the grid
-				indicesInGrid = np.floor((half1[i, :] - np.array([minX, minY, minZ])) / spacing);
+				indicesInGrid = np.floor((half1[i, :] - np.array([minX, minY, minZ])) / self.apix);
 				indicesInGrid = indicesInGrid.astype(int);
 				tmpHalfMap1[indicesInGrid[0], indicesInGrid[1], indicesInGrid[2]] = tmpHalfMap1[indicesInGrid[0], indicesInGrid[1], indicesInGrid[2]] + 1.0;
 
@@ -195,7 +199,7 @@ class SMLM:
 			# place localizations of HalfSet2
 			for i in range(half2.shape[0]):
 				# transform localization to the grid
-				indicesInGrid = np.floor((half2[i, :] - np.array([minX, minY])) / spacing);
+				indicesInGrid = np.floor((half2[i, :] - np.array([minX, minY])) / self.apix);
 				indicesInGrid = indicesInGrid.astype(int);
 				tmpHalfMap2[indicesInGrid[0], indicesInGrid[1], indicesInGrid[2]] = tmpHalfMap2[indicesInGrid[0], indicesInGrid[1], indicesInGrid[2]] + 1.0;
 
@@ -221,8 +225,9 @@ class SMLM:
 		plt.axhline(0.5, linewidth=0.5, color='r');
 		plt.axhline(0.143, linewidth=0.5, color='r');
 		plt.axhline(0.0, linewidth=0.5, color='b');
+		plt.axvline(1.0/self.resolution, linewidth = 0.5, color='b');
 
-		plt.xlabel("1/ Resolution score");
+		plt.xlabel("1/ Resolution");
 		plt.ylabel("FSC");
 		plt.legend();
 

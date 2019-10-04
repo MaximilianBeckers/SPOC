@@ -34,7 +34,7 @@ def localResolutions2D(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numA
 	halfBoxSize = int(boxSize / 2.0);
 
 	# make Hann window
-	hannWindow = FDRutil.makeHannWindow(np.zeros((boxSize, boxSize, boxSize)));
+	hannWindow = FDRutil.makeHannWindow(np.zeros((boxSize, boxSize)));
 
 	numCalculations = len(range(boxSize, boxSize + sizeMap[0], stepSize)) * len(
 		range(boxSize, boxSize + sizeMap[1], stepSize));
@@ -45,7 +45,7 @@ def localResolutions2D(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numA
 	# ****************************************************
 
 	print("Do initial permuations ...");
-	for i in range(10):
+	for i in range(1):
 
 		xInd = np.random.randint(boxSize, sizeMap[0] + boxSize);
 		yInd = np.random.randint(boxSize, sizeMap[1] + boxSize);
@@ -78,7 +78,7 @@ def localResolutions2D(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numA
 		windowHalfmap2 = windowHalfmap2 * hannWindow;
 
 		res, _, _, _, _, _, tmpPermutedCorCoeffs = FSCutil.FSC(windowHalfmap1, windowHalfmap2, None, apix, cutoff, numAsymUnits,
-													   True, False, None, False);
+													   False, False, None, True);
 
 		if i == 0:
 			# initialize the array of correlation coefficients
@@ -104,11 +104,12 @@ def localResolutions2D(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numA
 
 	#parallelized local resolutions
 	numCores = multiprocessing.cpu_count();
-	print("Using {:d} cores. This might take 5 minutes ...".format(numCores));
+	print("Using {:d} cores. This might take a few minutes ...".format(numCores));
 	iIterable = range(boxSize, boxSize + sizeMap[0], stepSize);
 
 	#initialize parallel processes
-	lenInt = int(math.ceil(len(iIterable)/float(numCores)));
+	lenInt = int(math.floor(len(iIterable)/float(numCores)));
+
 	queue = multiprocessing.Queue();
 
 	#start process for each core and run in parallel
@@ -138,7 +139,7 @@ def localResolutions2D(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numA
 	x = np.linspace(1, 10, locRes.shape[0]);
 	y = np.linspace(1, 10, locRes.shape[1]);
 
-	myInterpolatingFunction = RegularGridInterpolator((x, y, z), locRes, method='linear')
+	myInterpolatingFunction = RegularGridInterpolator((x, y), locRes, method='linear')
 
 	xNew = np.linspace(1, 10, sizeMap[0]);
 	yNew = np.linspace(1, 10, sizeMap[1]);
@@ -183,7 +184,7 @@ def loopOverMap(iSeq, queue,  paddedMask, paddedHalfMap1, paddedHalfMap2, boxSiz
 
 				_, _, _, _, _, tmpRes, _ = FSCutil.FSC(window_halfmap1, window_halfmap2, None, apix, cutoff,
 														   numAsymUnits,
-														   True, False, permutedCorCoeffs, False);
+														   False, False, None, True);
 
 				locRes[iInd, jInd] = tmpRes;
 
