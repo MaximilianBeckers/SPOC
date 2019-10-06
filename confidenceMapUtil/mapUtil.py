@@ -68,7 +68,7 @@ def localFiltration(map, locResMap, apix, localVariance, windowSize, boxCoord, E
 			print(output);
 		
 		#get indices of voxels with the current resolution	
-		indices = np.where(locResMapData == tmpRes);
+		indices = np.where(np.abs(locResMapData - tmpRes) < 0.0000001);
 
 		if (indices[0].size == 0):
 			#this resolution is obviously not in the map, so skip
