@@ -10,6 +10,7 @@ import math
 class SMLM:
 
 	embedding = [];
+	lowRes = None;
 	halfMap1 = [];
 	halfMap2 = [];
 	fullMap = [];
@@ -73,7 +74,7 @@ class SMLM:
 		self.writeFSC();
 
 	#---------------------------------------------
-	def localResolution(self, embeddingData, image1, image2, apix, stepSize, boxSize):
+	def localResolution(self, embeddingData, image1, image2, apix, stepSize, boxSize, lowRes):
 
 		np.random.seed(3);
 
@@ -111,7 +112,7 @@ class SMLM:
 		self.frequencyMap = FSCutil.calculate_frequency_map(self.halfMap1);
 
 		#estimate the local resolutions
-		self.localResolutions = localResolutions2D.localResolutions2D(self.halfMap1, self.halfMap2, boxSize, stepSize, 0.5, self.apix, 1, maskData, maskData);
+		self.localResolutions = localResolutions2D.localResolutions2D(self.halfMap1, self.halfMap2, boxSize, stepSize, 0.5, self.apix, 1, maskData, maskData, lowRes);
 
 		#do local filtering
 		self.filteredMap, _, _, _ = mapUtil.localFiltration(self.fullMap, self.localResolutions, self.apix, False, None, None, None);

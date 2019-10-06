@@ -64,7 +64,7 @@ def main():
 		if not args.localResolutions:
 			SMLMObject.resolution(localizations, None, None, args.apix);
 		else:
-			SMLMObject.localResolution(localizations, None, None, args.apix, stepSize, boxSize);
+			SMLMObject.localResolution(localizations, None, None, args.apix, stepSize, boxSize, args.lowRes);
 
 	else:
 
@@ -81,7 +81,7 @@ def main():
 		if not args.localResolutions:
 			SMLMObject.resolution(None, image1, image2, args.apix);
 		else:
-			SMLMObject.localResolution(None, image1, image2, args.apix, stepSize, boxSize);
+			SMLMObject.localResolution(None, image1, image2, args.apix, stepSize, boxSize, args.lowRes);
 
 
 	#************************
@@ -89,9 +89,6 @@ def main():
 	#************************
 
 	if args.localResolutions:
-
-		if args.lowRes is not None:  # if low-resolution bound is give, use it
-			SMLMObject.localResolutions[SMLMObject.localResolutions > args.lowRes] = args.lowRes;
 
 		# plot the local resolutions
 		plt.imshow(SMLMObject.localResolutions.T, cmap='hot', origin='lower');

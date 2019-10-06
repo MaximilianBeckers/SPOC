@@ -7,7 +7,7 @@ from confidenceMapUtil import FDRutil
 from scipy.interpolate import RegularGridInterpolator
 
 #------------------------------------------------------------
-def localResolutions2D(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsymUnits, mask, maskPermutation):
+def localResolutions2D(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsymUnits, mask, maskPermutation, lowRes):
 
 	# ********************************************
 	# ****** calculate local resolutions by ******
@@ -131,6 +131,10 @@ def localResolutions2D(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numA
 	for i in range(numCores):
 		locRes = locRes + queue.get();
 
+
+	if lowRes is not None:  # if low-resolution bound is give, use it
+			locRes[locRes > lowRes] = lowRes;
+
 	# *************************************
 	# ********** do interpolation *********
 	# *************************************
@@ -139,7 +143,7 @@ def localResolutions2D(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numA
 	x = np.linspace(1, 10, locRes.shape[0]);
 	y = np.linspace(1, 10, locRes.shape[1]);
 
-	myInterpolatingFunction = RegularGridInterpolator((x, y), locRes, method='linear')
+	myInterpolatingFunction = RegularGridInterpolator((x, y), locRes, method='nearest')
 
 	xNew = np.linspace(1, 10, sizeMap[0]);
 	yNew = np.linspace(1, 10, sizeMap[1]);
