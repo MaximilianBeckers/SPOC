@@ -48,11 +48,6 @@ def localFiltration(map, locResMap, apix, localVariance, windowSize, boxCoord, E
 	counter = 0;
 	numRes = len(locResArray);	
 
-	#get initial noise statistics
-	initMapData = np.copy(map);
-	#initMean, initVar, _ = FDRutil.estimateNoiseFromMap(initMapData, windowSize, boxCoord);
-	#noiseMapData = np.random.normal(initMean, math.sqrt(initVar), (100, 100, 100));
-
 	#do FFT of the respective map
 	fftObject = pyfftw.builders.rfftn(map);
 	mapFFT = fftObject();
@@ -80,21 +75,17 @@ def localFiltration(map, locResMap, apix, localVariance, windowSize, boxCoord, E
 			counter = counter + 1;
 			continue;
 		elif math.fabs(tmpRes - limRes) < 0.0000001:
-			#xInd, yInd, zInd = indices[0], indices[1], indices[2];
-			
+
 			#do local filtration
 			tmpFilteredMapData = FDRutil.lowPassFilter(mapFFT, frequencyMap, tmpRes, map.shape);
 
 			#set the filtered voxels
-			#filteredMapData[xInd, yInd, zInd] = tmpFilteredMapData[xInd, yInd, zInd];
 			filteredMapData[indices] = tmpFilteredMapData[indices];
 		else:
-			#xInd, yInd, zInd = indices[0], indices[1], indices[2];
+
 			#do local filtration
 			tmpFilteredMapData = FDRutil.lowPassFilter(mapFFT, frequencyMap, tmpRes, map.shape);
 			#set the filtered voxels
-
-			#filteredMapData[xInd, yInd, zInd] = tmpFilteredMapData[xInd, yInd, zInd];
 			filteredMapData[indices] = tmpFilteredMapData[indices];
 
 			if localVariance == True:
@@ -109,8 +100,6 @@ def localFiltration(map, locResMap, apix, localVariance, windowSize, boxCoord, E
 					ECDFmap = 0;
 
 				tmpMean, tmpVar, _ = FDRutil.estimateNoiseFromMap(tmpFilteredMapData, windowSize, boxCoord);
-				#mean[xInd, yInd, zInd] = tmpMean;
-				#var[xInd, yInd, zInd] = tmpVar;
 				mean[indices] = tmpMean;
 				var[indices] = tmpVar;
 	print("Local filtering finished ...");
