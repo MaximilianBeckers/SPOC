@@ -88,16 +88,6 @@ def main():
 	#***** plot images ******
 	#************************
 
-	plt.imshow(SMLMObject.fullMap.T, cmap='hot', origin='lower')
-	plt.colorbar();
-	plt.savefig('heatMap_full.png', dpi=300);
-	plt.close();
-
-	#plt.imshow(SMLMObject.filteredMap.T, cmap='hot', origin='lower')
-	#plt.colorbar();
-	#plt.savefig('heatMap_filt.png', dpi=300);
-	#plt.close();
-
 	if args.localResolutions:
 
 		if args.lowRes is not None:  # if low-resolution bound is give, use it
@@ -108,6 +98,16 @@ def main():
 		plt.colorbar();
 		plt.savefig('localResolutions.png', dpi=300);
 		plt.close();
+
+	plt.imshow(SMLMObject.fullMap.T, cmap='hot', origin='lower')
+	plt.colorbar();
+	plt.savefig('heatMap_full.png', dpi=300);
+	plt.close();
+
+	plt.imshow(SMLMObject.filteredMap.T, cmap='hot', origin='lower')
+	plt.colorbar();
+	plt.savefig('heatMap_filt.png', dpi=300);
+	plt.close();
 
 if (__name__ == "__main__"):
 	main()

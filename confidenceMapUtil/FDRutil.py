@@ -533,37 +533,60 @@ def tanh_filter(x, cutoff):
 
 	return fx;
 
-#---------------------------------------------------------------------------------
+#-----------------------------------------------------
 def calculate_frequency_map(map):
 
-    sizeMap = map.shape;
+	#*********************************************************
+	#*** calculation of the frequency map of the given map ***
+	#*********************************************************
 
-    #calc frequency for each voxel
-    freqi = np.fft.fftfreq(sizeMap[0], 1.0);
-    freqj = np.fft.fftfreq(sizeMap[1], 1.0);
-    freqk = np.fft.rfftfreq(sizeMap[2], 1.0);
+	sizeMap = map.shape;
 
-    sizeFFT = np.array([freqi.size, freqj.size, freqk.size]);
-    FFT = np.zeros(sizeFFT);
+	if map.ndim == 3:
+		# calc frequency for each voxel
+		freqi = np.fft.fftfreq(sizeMap[0], 1.0);
+		freqj = np.fft.fftfreq(sizeMap[1], 1.0);
+		freqk = np.fft.rfftfreq(sizeMap[2], 1.0);
 
-    freqMapi = np.copy(FFT);
-    for j in range(sizeFFT[1]):
-        for k in range(sizeFFT[2]):
-            freqMapi[:,j,k] = freqi*freqi;
+		sizeFFT = np.array([freqi.size, freqj.size, freqk.size]);
+		FFT = np.zeros(sizeFFT);
 
-    freqMapj = np.copy(FFT);
-    for i in range(sizeFFT[0]):
-        for k in range(sizeFFT[2]):
-            freqMapj[i,:,k] = freqj*freqj;
+		freqMapi = np.copy(FFT);
+		for j in range(sizeFFT[1]):
+			for k in range(sizeFFT[2]):
+				freqMapi[:, j, k] = freqi * freqi;
 
-    freqMapk = np.copy(FFT);
-    for i in range(sizeFFT[0]):
-        for j in range(sizeFFT[1]):
-            freqMapk[i,j,:] = freqk*freqk;
-    
-    frequencyMap = np.sqrt(freqMapi + freqMapj + freqMapk);
+		freqMapj = np.copy(FFT);
+		for i in range(sizeFFT[0]):
+			for k in range(sizeFFT[2]):
+				freqMapj[i, :, k] = freqj * freqj;
 
-    return frequencyMap;
+		freqMapk = np.copy(FFT);
+		for i in range(sizeFFT[0]):
+			for j in range(sizeFFT[1]):
+				freqMapk[i, j, :] = freqk * freqk;
+
+		frequencyMap = np.sqrt(freqMapi + freqMapj + freqMapk);
+
+	elif map.ndim == 2:
+		# calc frequency for each voxel
+		freqi = np.fft.fftfreq(sizeMap[0], 1.0);
+		freqj = np.fft.rfftfreq(sizeMap[1], 1.0);
+
+		sizeFFT = np.array([freqi.size, freqj.size]);
+		FFT = np.zeros(sizeFFT);
+
+		freqMapi = np.copy(FFT);
+		for j in range(sizeFFT[1]):
+			freqMapi[:, j] = freqi * freqi;
+
+		freqMapj = np.copy(FFT);
+		for i in range(sizeFFT[0]):
+			freqMapj[i, :] = freqj * freqj;
+
+		frequencyMap = np.sqrt(freqMapi + freqMapj);
+
+	return frequencyMap;
 
 #---------------------------------------------------------------------------------
 def lowPassFilter(mapFFT, frequencyMap, cutoff, shape):

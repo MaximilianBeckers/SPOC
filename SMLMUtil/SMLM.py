@@ -3,7 +3,7 @@ from scipy.stats import ttest_1samp
 import sys
 import matplotlib.pyplot as plt
 from FSCUtil import FSCutil, localResolutions2D
-from confidenceMapUtil import FDRutil
+from confidenceMapUtil import FDRutil, mapUtil
 import math
 
 #****************************************************
@@ -110,7 +110,12 @@ class SMLM:
 		self.fullMap = self.halfMap1 + self.halfMap2;
 		self.frequencyMap = FSCutil.calculate_frequency_map(self.halfMap1);
 
+		#estimate the local resolutions
 		self.localResolutions = localResolutions2D.localResolutions2D(self.halfMap1, self.halfMap2, boxSize, stepSize, 0.5, self.apix, 1, maskData, maskData);
+
+		#do local filtering
+		self.filteredMap, _, _, _ = mapUtil.localFiltration(self.fullMap, self.localResolutions, self.apix, False, None, None, None);
+
 
 	#---------------------------------------------
 	def make_half_maps(self):
@@ -119,8 +124,6 @@ class SMLM:
 		#**** if localizations are done in 2D ****
 		#*****************************************
 		if self.dimension == 2:
-
-
 
 			#make the grid
 			minX = min(np.amin(self.embeddingsHalf1[:,0]), np.amin(self.embeddingsHalf2[:,0]));
