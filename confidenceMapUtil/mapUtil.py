@@ -19,10 +19,7 @@ def localFiltration(map, locResMap, apix, localVariance, windowSize, boxCoord, E
 
 	#some initialization
 	mapSize = map.shape;
-	#numX = mapSize[0];
-	#numY = mapSize[1];
-	#numZ = mapSize[2];
-	
+
 	mean = np.zeros(mapSize);
 	var = np.zeros(mapSize);
 	ECDFmap = np.ones(mapSize);

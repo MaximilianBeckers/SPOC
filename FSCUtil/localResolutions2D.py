@@ -143,7 +143,7 @@ def localResolutions2D(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numA
 	x = np.linspace(1, 10, locRes.shape[0]);
 	y = np.linspace(1, 10, locRes.shape[1]);
 
-	myInterpolatingFunction = RegularGridInterpolator((x, y), locRes, method='nearest')
+	myInterpolatingFunction = RegularGridInterpolator((x, y), locRes, method='linear')
 
 	xNew = np.linspace(1, 10, sizeMap[0]);
 	yNew = np.linspace(1, 10, sizeMap[1]);

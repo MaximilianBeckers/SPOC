@@ -116,7 +116,7 @@ class SMLM:
 
 		#do local filtering
 		self.filteredMap, _, _, _ = mapUtil.localFiltration(self.fullMap, self.localResolutions, self.apix, False, None, None, None);
-
+		self.filteredMap[self.filteredMap<0.0] = 0.0;
 
 	#---------------------------------------------
 	def make_half_maps(self):
