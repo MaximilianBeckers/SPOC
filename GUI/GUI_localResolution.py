@@ -1,5 +1,6 @@
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
 from FSCUtil import FSCutil, localResolutions
 from confidenceMapUtil import FDRutil
 import mrcfile
@@ -37,7 +38,12 @@ class ResolutionWindow(QWidget):
 		layout.addRow('', QHBoxLayout()); # make some space
 		layout.addRow('', QHBoxLayout()); # make some space
 
-		layout.addRow('Optional Input:', QHBoxLayout());
+
+		# ------------ now optional input
+		layout.addRow(' ', QHBoxLayout()); # make some space
+		optionLabel = QLabel("Optional Input", self);
+		optionLabel.setFont(QFont('Arial', 17));
+		layout.addRow(optionLabel, QHBoxLayout());
 
 		self.apix = QLineEdit();
 		self.apix.setText('None');

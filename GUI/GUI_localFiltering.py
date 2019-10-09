@@ -1,6 +1,7 @@
 import sys
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
 from confidenceMapUtil import mapUtil
 import mrcfile
 import numpy as np
@@ -35,8 +36,11 @@ class LocalFilteringWindow(QWidget):
 		layout.addRow('',QHBoxLayout());
 		layout.addRow('',QHBoxLayout());
 
+		# ------------ now optional input
 		layout.addRow(' ', QHBoxLayout()); # make some space
-		layout.addRow('Optional Input:', QHBoxLayout());
+		optionLabel = QLabel("Optional Input", self);
+		optionLabel.setFont(QFont('Arial', 17));
+		layout.addRow(optionLabel, QHBoxLayout());
 
 		self.apix = QLineEdit();
 		self.apix.setText("None");

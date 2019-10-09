@@ -33,7 +33,9 @@ class ConfMapWindow(QWidget):
 
 		# ------------ now optional input
 		layout.addRow(' ', QHBoxLayout()); # make some space
-		layout.addRow('Optional Input:', QHBoxLayout());
+		optionLabel = QLabel("Optional Input", self);
+		optionLabel.setFont(QFont('Arial', 17));
+		layout.addRow(optionLabel, QHBoxLayout());
 
 		# add choice for error criterion
 		self.cb = QComboBox();
