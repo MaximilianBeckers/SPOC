@@ -13,11 +13,13 @@ class Window(QWidget):
 
 
 		#set first line of GUI
-		self.nameLabel = QLabel("SPOC", self);
+		self.nameLabel = QLabel("Statistical Processing of cryo-EM maps", self);
+		self.nameLabel.setFont(QFont('Arial', 25));
 
 		self.captionLayout = QHBoxLayout();
+		self.captionLayout.addStretch(1);
 		self.captionLayout.addWidget(self.nameLabel);
-
+		self.captionLayout.addStretch(1);
 
 
 
@@ -46,18 +48,20 @@ class Window(QWidget):
 
 		#set third line of GUI
 		logoEMBL = QLabel(self)
-		pixmap = QPixmap('GUI/images/EMBL_logo.png')
+		pixmap = QPixmap('/Users/mbeckers/Desktop/SPOC/GUI/images/EMBL_logo.png')
 		pixmap_scaled = pixmap.scaledToWidth(200)
 		logoEMBL.setPixmap(pixmap_scaled);
 
 		logoFZ = QLabel(self)
-		pixmap = QPixmap('GUI/images/fz_logo.png')
+		pixmap = QPixmap('/Users/mbeckers/Desktop/SPOC/GUI/images/fz_logo.png')
 		pixmap_scaled = pixmap.scaledToWidth(200)
 		logoFZ.setPixmap(pixmap_scaled);
 
 
 		self.bottomLayout = QHBoxLayout();
 		self.bottomLayout.addWidget(logoEMBL);
+		self.bottomLayout.addStretch(1);
+		self.bottomLayout.addWidget(QLabel(" Maximilian Beckers\n maximilian.beckers@embl.de", self));
 		self.bottomLayout.addStretch(1);
 		self.bottomLayout.addWidget(logoFZ);
 
@@ -66,6 +70,7 @@ class Window(QWidget):
 		#set overall layout
 		self.overallLayout = QVBoxLayout();
 		self.overallLayout.addLayout(self.captionLayout);
+		self.overallLayout.addSpacing(20);
 		self.overallLayout.addLayout(self.mainLayout);
 		self.overallLayout.addLayout(self.bottomLayout);
 
