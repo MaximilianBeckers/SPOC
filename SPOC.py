@@ -1,25 +1,23 @@
 import sys
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-from GUI import GUI_uniformSharpening, GUI_mapDoseWeighting, GUI_resolutions, GUI_confidenceMap
+from GUI import GUI_localFiltering, GUI_resolutions, GUI_confidenceMap, GUI_localResolution
 
 class Window(QWidget):
-	
+
 	def __init__(self):
 
 		super(Window, self).__init__();
 		self.leftlist = QListWidget();
-		self.leftlist.insertItem(0, 'Resolution measures');
-		self.leftlist.insertItem(1, 'Uniform Sharpening and Filtering');
-		self.leftlist.insertItem(2, 'Local Filtering');
-		self.leftlist.insertItem(3, 'LocScale');
-		self.leftlist.insertItem(4, 'ConfidenceMap');
-		self.leftlist.insertItem(5, 'Map Dose-Weighting');
+		self.leftlist.insertItem(0, 'Global resolution estimation by FDR-FSC');
+		self.leftlist.insertItem(1, 'Local resolution estimation by FDR-FSC');
+		self.leftlist.insertItem(2, 'Local resolution filtering');
+		self.leftlist.insertItem(3, 'Confidence maps');
 
 		self.stack1 = GUI_resolutions.ResolutionWindow();
-		self.stack2 = GUI_uniformSharpening.SharpeningWindow();
-		self.stack3 = GUI_confidenceMap.ConfMapWindow();
-		self.stack4 = GUI_mapDoseWeighting.MapDWWindow();
+		self.stack2 = GUI_localResolution.ResolutionWindow();
+		self.stack3 = GUI_localFiltering.LocalFilteringWindow();
+		self.stack4 = GUI_confidenceMap.ConfMapWindow();
 
 		self.Stack = QStackedWidget(self);
 		self.Stack.addWidget(self.stack1);
@@ -33,7 +31,7 @@ class Window(QWidget):
 		
 		self.setLayout(hbox);
 		self.leftlist.currentRowChanged.connect(self.display);
-		self.setWindowTitle('PoPro');
+		self.setWindowTitle('SPOC');
 		self.show();
 	
 	def display(self,i):

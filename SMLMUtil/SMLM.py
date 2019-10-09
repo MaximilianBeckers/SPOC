@@ -207,7 +207,6 @@ class SMLM:
 				indicesInGrid = indicesInGrid.astype(int);
 				tmpHalfMap2[indicesInGrid[0], indicesInGrid[1], indicesInGrid[2]] = tmpHalfMap2[indicesInGrid[0], indicesInGrid[1], indicesInGrid[2]] + 1.0;
 
-
 		self.halfMap1 = tmpHalfMap1;
 		self.halfMap2 = tmpHalfMap2;
 

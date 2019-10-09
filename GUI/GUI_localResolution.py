@@ -1,6 +1,6 @@
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-from FSCUtil import FSCutil
+from FSCUtil import FSCutil, localResolutions
 from confidenceMapUtil import FDRutil
 import mrcfile
 import numpy as np
@@ -33,10 +33,6 @@ class ResolutionWindow(QWidget):
 		hbox_half2.addWidget(searchButton_halfMap2);
 		layout.addRow('Half Map 2', hbox_half2);
 
-		self.symmetry = QLineEdit();
-		self.symmetry.setText('C1');
-		layout.addRow('Symmetry', self.symmetry);
-
 		layout.addRow('', QHBoxLayout()); # make some space
 		layout.addRow('', QHBoxLayout()); # make some space
 		layout.addRow('', QHBoxLayout()); # make some space
@@ -47,13 +43,17 @@ class ResolutionWindow(QWidget):
 		self.apix.setText('None');
 		layout.addRow('Pixel size [A]', self.apix);
 
-		self.numAsUnit = QLineEdit();
-		self.numAsUnit.setText('None');
-		layout.addRow('# asym. units', self.numAsUnit);
+		self.stepSize = QLineEdit();
+		self.stepSize.setText('5');
+		layout.addRow('stepSize', self.stepSize);
 
-		self.bFactor = QLineEdit();
-		self.bFactor.setText('None');
-		layout.addRow('B-factor', self.bFactor);
+		self.w = QLineEdit();
+		self.w.setText('20');
+		layout.addRow('Window size', self.w);
+
+		self.lowRes = QLineEdit();
+		self.lowRes.setText('None');
+		layout.addRow('Low resolution bound', self.lowRes);
 
 		# make some space
 		layout.addRow('', QHBoxLayout());
@@ -62,6 +62,15 @@ class ResolutionWindow(QWidget):
 		# some buttons
 		qtBtn = self.quitButton();
 		runBtn = self.FSCBtn();
+
+		# add mask
+		hbox_mask = QHBoxLayout();
+		self.fileLine_mask = QLineEdit();
+		searchButton_mask = self.searchFileButton_mask();
+		hbox_mask.addWidget(self.fileLine_mask);
+		hbox_mask.addWidget(searchButton_mask);
+		layout.addRow('Mask', hbox_mask);
+
 
 		buttonBox = QHBoxLayout();
 		buttonBox.addWidget(qtBtn);
@@ -91,6 +100,17 @@ class ResolutionWindow(QWidget):
 		if filename:
 			self.fileLine_halfMap2.setText(filename[0]);
 
+	def searchFileButton_mask(self):
+		btn = QPushButton('Search File');
+		btn.clicked.connect(self.onInputFileButtonClicked_mask);
+		return btn;
+
+	def onInputFileButtonClicked_mask(self):
+		filename = QFileDialog.getOpenFileName(caption='Open file');
+		if filename:
+			self.fileLine_mask.setText(filename[0]);
+
+
 	def quitButton(self):
 		btn = QPushButton('Quit');
 		btn.clicked.connect(QCoreApplication.instance().quit);
@@ -100,24 +120,23 @@ class ResolutionWindow(QWidget):
 
 	def FSCBtn(self):
 
-		btn = QPushButton('Run FSC');
+		btn = QPushButton('Run local FSC');
 		btn.resize(btn.minimumSizeHint());
-		btn.clicked.connect(self.runFSC);
+		btn.clicked.connect(self.runLocalFSC);
 
 		return btn;
 
-
-	def showMessageBox(self, resolution, bFactor):
+	def showMessageBox(self):
 
 		msg = QMessageBox();
 		msg.setIcon(QMessageBox.Information);
-		msg.setText("Resolution at 1% FDR-FSC: {:.2f}. \n \nEstimated B-factor: {:.2f}".format(resolution, bFactor));
-		msg.setWindowTitle("Results");
+		msg.setText("Local resolutions estimation finished!");
+		msg.setWindowTitle("Finished");
 		msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel);
 		retval = msg.exec_();
 
 	# ---------------------------------------------
-	def runFSC(self):
+	def runLocalFSC(self):
 
 		start = time.time();
 
@@ -140,15 +159,22 @@ class ResolutionWindow(QWidget):
 
 		# set output filename
 		splitFilename = os.path.splitext(os.path.basename(self.fileLine_halfMap1.text()));
-		outputFilename_PostProcessed = splitFilename[0] + "_postProcessed.mrc";
+		outputFilename_LocRes = splitFilename[0] + "_localResolutions.mrc";
 
 
 		# make the mask
-		print("Using a circular mask ...");
-		maskData = FSCutil.makeCircularMask(halfMap1Data, (np.min(halfMap1Data.shape) / 2.0) - 4.0);  # circular mask
-		maskBFactor = FSCutil.makeCircularMask(halfMap1Data, (
-					np.min(halfMap1Data.shape) / 4.0) - 4.0);  # smaller circular mask for B-factor estimation
+		try:
+			mask = mrcfile.open(self.fileLine_mask.text(), mode='r+');
+		except:
+			mask = None;
 
+		maskData = FSCutil.makeCircularMask(halfMap1Data, (np.min(halfMap1Data.shape) / 2.0) - 4.0);  # circular mask
+
+		if mask is not None:
+			print("Using user provided mask ...");
+			maskPermutationData = np.copy(mask.data);
+		else:
+			maskPermutationData = maskData;
 
 		#**************************************
 		#********* get pixel size *************
@@ -169,60 +195,65 @@ class ResolutionWindow(QWidget):
 			apix = apixMap;
 
 		#******************************************
-		#*********** get num Asym Units ***********
+		#************* get step Size **************
 		#******************************************
 
 		try:
-			numAsymUnits = int(self.numAsUnit.text());
+			stepSize = int(self.stepSize.text());
 		except:
-			numAsymUnits = None;
-
-		if numAsymUnits is not None:
-			print('Using user provided number of asymmetric units, given as {:d}'.format(numAsymUnits));
-		else:
-			symmetry = self.symmetry.text();
-			numAsymUnits = FSCutil.getNumAsymUnits(symmetry);
-			print('Using provided ' + symmetry + ' symmetry. Number of asymmetric units: {:d}'.format(numAsymUnits));
+			print("Invalid input for stepSize. Needs to be a integer >= 0 ...")
 
 		#******************************************
-		#*************** get bFactor **************
+		#************* get step Size **************
 		#******************************************
+
 		try:
-			bFactorInput = float(self.bFactor.text());
+			stepSize = int(self.stepSize.text());
 		except:
-			bFactorInput = None;
+			print("Invalid input for stepSize. Needs to be a integer >= 0 ...")
 
-		#run the FSC
-		res, FSC, percentCutoffs, pValues, qValsFDR, resolution, _ = FSCutil.FSC(halfMap1Data, halfMap2Data,
-																				 maskData, apix, 0.143,
-																				 numAsymUnits, False, True, None,
-																				 False);
+		#********************************************
+		#************* get window size **************
+		#********************************************
 
-		# write the FSC
-		FSCutil.writeFSC(res, FSC, qValsFDR, pValues, resolution);
+		try:
+			windowSize = int(self.w.text());
+		except:
+			print("Invalid input for windowSize. Needs to be a integer >= 0 ...");
 
-		if resolution < 8.0:
+		# ********************************************
+		# ************* get window size **************
+		# ********************************************
 
-			# estimate b-factor and sharpen the map
-			bFactor = FSCutil.estimateBfactor(0.5 * (halfMap1Data + halfMap2Data), resolution, apix, maskBFactor);
+		try:
+			lowRes = int(self.lowRes.text());
+		except:
+			lowRes = None;
 
-			if bFactorInput is not None:
-				bFactor = bFactorInput;
-				print('Using a user-specified B-factor of {:.2f} for map sharpening'.format(-bFactor));
-			else:
-				print('Using a B-factor of {:.2f} for map sharpening.'.format(-bFactor));
+		# *******************************************
+		# ********* calc local Resolutions **********
+		# *******************************************
 
-			processedMap = FDRutil.sharpenMap(0.5 * (halfMap1Data + halfMap2Data), -bFactor, apix, resolution);
+		FSCcutoff = 0.5;
 
-			# write the post-processed map
-			postProcMRC = mrcfile.new(outputFilename_PostProcessed, overwrite=True);
-			postProc = np.float32(processedMap);
-			postProcMRC.set_data(postProc);
-			postProcMRC.voxel_size = apix;
-			postProcMRC.close();
+		localResMap = localResolutions.localResolutions(halfMap1Data, halfMap2Data, windowSize, stepSize, FSCcutoff, apix,
+															1,
+															maskData, maskPermutationData);
 
-			output = "Saved sharpened and filtered map to: " + outputFilename_PostProcessed;
-			print(output);
+		# set lowest resolution if wished
+		if lowRes is not None:
+			lowRes = lowRes;
+			localResMap[localResMap > lowRes] = lowRes;
+
+		# write the local resolution map
+		localResMapMRC = mrcfile.new(outputFilename_LocRes, overwrite=True);
+		localResMap = np.float32(localResMap);
+		localResMapMRC.set_data(localResMap);
+		localResMapMRC.voxel_size = apix;
+		localResMapMRC.close();
+
+		output = "Saved local resolutions map to: " + outputFilename_LocRes;
+		print(output);
 
 		end = time.time();
 		totalRuntime = end - start;
@@ -230,5 +261,4 @@ class ResolutionWindow(QWidget):
 		print("****** Summary ******");
 		print("Runtime: %.2f" % totalRuntime);
 
-		self.showMessageBox(resolution, bFactor);
-
+		self.showMessageBox();

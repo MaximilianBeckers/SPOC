@@ -476,6 +476,9 @@ def writeFSC(resolutions, FSC, qValuesFDR, pValues, resolution):
 	plt.savefig('FSC.png', dpi=300);
 	plt.close();
 
+	#save txt file
+	np.savetxt("FSC.txt", (resolutions, FSC));
+
 #-------------------------------------------------------
 def roundMapToVectorElements(map, apix): 
 	
