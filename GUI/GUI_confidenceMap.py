@@ -30,15 +30,15 @@ class ConfMapWindow(QWidget):
 		self.boxSize.setText('50');
 		layout.addRow('Box size:', self.boxSize);
 
-		# add choice for error criterion
-		self.cb = QComboBox();
-		self.cb.addItems(['FDR Benj.-Yekut.', 'FDR Benj.-Hochb.', 'FWER Bonf.-Holm', 'FWER Hochberg']);
-		layout.addRow('Error criterion:', self.cb);
-
 
 		# ------------ now optional input
 		layout.addRow(' ', QHBoxLayout()); # make some space
 		layout.addRow('Optional Input:', QHBoxLayout());
+
+		# add choice for error criterion
+		self.cb = QComboBox();
+		self.cb.addItems(['FDR Benj.-Yekut.', 'FDR Benj.-Hochb.', 'FWER Bonf.-Holm', 'FWER Hochberg']);
+		layout.addRow('Error criterion:', self.cb);
 
 		# add local resolution
 		hbox = QHBoxLayout();
