@@ -56,6 +56,14 @@ class ResolutionWindow(QWidget):
 		self.bFactor.setText('None');
 		layout.addRow('B-factor', self.bFactor);
 
+		# add output directory
+		hbox_output = QHBoxLayout();
+		self.fileLine_output = QLineEdit();
+		searchButton_output = self.searchFileButton_output();
+		hbox_output.addWidget(self.fileLine_output);
+		hbox_output.addWidget(searchButton_output);
+		layout.addRow('Save output to ', hbox_output);
+
 		# make some space
 		layout.addRow('', QHBoxLayout());
 		layout.addRow('', QHBoxLayout());
@@ -92,6 +100,16 @@ class ResolutionWindow(QWidget):
 		if filename:
 			self.fileLine_halfMap2.setText(filename[0]);
 
+	def searchFileButton_output(self):
+		btn = QPushButton('Search File');
+		btn.clicked.connect(self.onInputFileButtonClicked_output);
+		return btn;
+
+	def onInputFileButtonClicked_output(self):
+		filename = QFileDialog.getExistingDirectory(caption='Set output directory');
+		if filename:
+			self.fileLine_output.setText(filename);
+
 	def quitButton(self):
 		btn = QPushButton('Quit');
 		btn.clicked.connect(QCoreApplication.instance().quit);
@@ -124,8 +142,8 @@ class ResolutionWindow(QWidget):
 
 		#read the half maps
 		try:
-			half_map1 = mrcfile.open(self.fileLine_halfMap1.text(), mode='r+');
-			half_map2 = mrcfile.open(self.fileLine_halfMap2.text(), mode='r+');
+			half_map1 = mrcfile.open(self.fileLine_halfMap1.text(), mode='r');
+			half_map2 = mrcfile.open(self.fileLine_halfMap2.text(), mode='r');
 		except:
 			msg = QMessageBox();
 			msg.setIcon(QMessageBox.Information);
@@ -139,9 +157,13 @@ class ResolutionWindow(QWidget):
 		halfMap2Data = np.copy(half_map2.data);
 		sizeMap = halfMap1Data.shape;
 
-		# set output filename
+		# set working directory and output filename
+		path = self.fileLine_output.text();
+		if path == '':
+			path = os.path.dirname(self.fileLine_halfMap1.text());
+		os.chdir(path);
 		splitFilename = os.path.splitext(os.path.basename(self.fileLine_halfMap1.text()));
-		outputFilename_PostProcessed = splitFilename[0] + "_postProcessed.mrc";
+		outputFilename_PostProcessed =  splitFilename[0] + "_postProcessed.mrc";
 
 
 		# make the mask

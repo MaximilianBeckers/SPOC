@@ -35,8 +35,6 @@ class ResolutionWindow(QWidget):
 		layout.addRow('Half Map 2', hbox_half2);
 
 		layout.addRow('', QHBoxLayout()); # make some space
-		layout.addRow('', QHBoxLayout()); # make some space
-		layout.addRow('', QHBoxLayout()); # make some space
 
 
 		# ------------ now optional input
@@ -77,6 +75,13 @@ class ResolutionWindow(QWidget):
 		hbox_mask.addWidget(searchButton_mask);
 		layout.addRow('Mask', hbox_mask);
 
+		# add output directory
+		hbox_output = QHBoxLayout();
+		self.fileLine_output = QLineEdit();
+		searchButton_output = self.searchFileButton_output();
+		hbox_output.addWidget(self.fileLine_output);
+		hbox_output.addWidget(searchButton_output);
+		layout.addRow('Save output to ', hbox_output);
 
 		buttonBox = QHBoxLayout();
 		buttonBox.addWidget(qtBtn);
@@ -116,6 +121,16 @@ class ResolutionWindow(QWidget):
 		if filename:
 			self.fileLine_mask.setText(filename[0]);
 
+	def searchFileButton_output(self):
+		btn = QPushButton('Search File');
+		btn.clicked.connect(self.onInputFileButtonClicked_output);
+		return btn;
+
+	def onInputFileButtonClicked_output(self):
+		filename = QFileDialog.getExistingDirectory(caption='Set output directory');
+		if filename:
+			self.fileLine_output.setText(filename);
+
 
 	def quitButton(self):
 		btn = QPushButton('Quit');
@@ -148,8 +163,8 @@ class ResolutionWindow(QWidget):
 
 		#read the half maps
 		try:
-			half_map1 = mrcfile.open(self.fileLine_halfMap1.text(), mode='r+');
-			half_map2 = mrcfile.open(self.fileLine_halfMap2.text(), mode='r+');
+			half_map1 = mrcfile.open(self.fileLine_halfMap1.text(), mode='r');
+			half_map2 = mrcfile.open(self.fileLine_halfMap2.text(), mode='r');
 		except:
 			msg = QMessageBox();
 			msg.setIcon(QMessageBox.Information);
@@ -163,7 +178,11 @@ class ResolutionWindow(QWidget):
 		halfMap2Data = np.copy(half_map2.data);
 		sizeMap = halfMap1Data.shape;
 
-		# set output filename
+		# set output filename and working directory
+		path = self.fileLine_output.text();
+		if path == '':
+			path = os.path.dirname(self.fileLine_halfMap1.text());
+		os.chdir(path);
 		splitFilename = os.path.splitext(os.path.basename(self.fileLine_halfMap1.text()));
 		outputFilename_LocRes = splitFilename[0] + "_localResolutions.mrc";
 

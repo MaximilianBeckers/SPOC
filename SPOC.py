@@ -1,4 +1,4 @@
-import sys
+import sys, os
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -11,7 +11,6 @@ class Window(QWidget):
 		super(Window, self).__init__();
 
 
-
 		#set first line of GUI
 		self.nameLabel = QLabel("Statistical Processing of cryo-EM maps", self);
 		self.nameLabel.setFont(QFont('Arial', 25));
@@ -21,14 +20,30 @@ class Window(QWidget):
 		self.captionLayout.addWidget(self.nameLabel);
 		self.captionLayout.addStretch(1);
 
-
-
 		#set second line of GUI
-		self.leftlist = QListWidget();
-		self.leftlist.insertItem(0, 'Global resolution estimation by FDR-FSC');
-		self.leftlist.insertItem(1, 'Local resolution estimation by FDR-FSC');
-		self.leftlist.insertItem(2, 'Local resolution filtering');
-		self.leftlist.insertItem(3, 'Confidence maps');
+		#---------------------------------------------
+		self.EMlabel = QLabel("cryo-EM", self);
+		self.EMlabel.setFont(QFont('Arial', 15));
+
+		self.leftlistEM = QListWidget();
+		self.leftlistEM.insertItem(0, 'Global resolution estimation by FDR-FSC');
+		self.leftlistEM.insertItem(1, 'Local resolution estimation by FDR-FSC');
+		self.leftlistEM.insertItem(2, 'Local resolution filtering');
+		self.leftlistEM.insertItem(3, 'Confidence maps');
+
+		self.LMlabel = QLabel("Single Molecule Localization Microscopy", self);
+		self.LMlabel.setFont(QFont('Arial', 15));
+
+		self.leftlistLM = QListWidget();
+		self.leftlistLM.insertItem(0, 'Global resolution estimation by FDR-FSC');
+		self.leftlistLM.insertItem(1, 'Local resolution estimation by FDR-FSC');
+
+		self.leftLayout = QVBoxLayout();
+		self.leftLayout.addWidget(self.EMlabel);
+		self.leftLayout.addWidget(self.leftlistEM);
+		self.leftLayout.addWidget(self.LMlabel);
+		self.leftLayout.addWidget(self.leftlistLM);
+
 
 		self.stack1 = GUI_resolutions.ResolutionWindow();
 		self.stack2 = GUI_localResolution.ResolutionWindow();
@@ -42,19 +57,20 @@ class Window(QWidget):
 		self.Stack.addWidget(self.stack4);
 
 		self.mainLayout = QHBoxLayout();
-		self.mainLayout.addWidget(self.leftlist);
+		self.mainLayout.addLayout(self.leftLayout);
 		self.mainLayout.addWidget(self.Stack);
 
-
 		#set third line of GUI
-		logoEMBL = QLabel(self)
-		pixmap = QPixmap('/Users/mbeckers/Desktop/SPOC/GUI/images/EMBL_logo.png')
-		pixmap_scaled = pixmap.scaledToWidth(200)
+		logoEMBL = QLabel(self);
+		filename_logoEMBL = os.path.normcase(os.path.abspath("SPOC/GUI/images/EMBL_logo.png"));
+		pixmap = QPixmap(filename_logoEMBL);
+		pixmap_scaled = pixmap.scaledToWidth(200);
 		logoEMBL.setPixmap(pixmap_scaled);
 
 		logoFZ = QLabel(self)
-		pixmap = QPixmap('/Users/mbeckers/Desktop/SPOC/GUI/images/fz_logo.png')
-		pixmap_scaled = pixmap.scaledToWidth(200)
+		filename_logoFZ = os.path.normcase(os.path.abspath("SPOC/GUI/images/fz_logo.png"));
+		pixmap = QPixmap(filename_logoFZ);
+		pixmap_scaled = pixmap.scaledToWidth(200);
 		logoFZ.setPixmap(pixmap_scaled);
 
 
@@ -65,8 +81,6 @@ class Window(QWidget):
 		self.bottomLayout.addStretch(1);
 		self.bottomLayout.addWidget(logoFZ);
 
-
-
 		#set overall layout
 		self.overallLayout = QVBoxLayout();
 		self.overallLayout.addLayout(self.captionLayout);
@@ -75,12 +89,16 @@ class Window(QWidget):
 		self.overallLayout.addLayout(self.bottomLayout);
 
 		self.setLayout(self.overallLayout);
-		self.leftlist.currentRowChanged.connect(self.display);
+		self.leftlistEM.currentRowChanged.connect(self.displayEM);
+		self.leftlistLM.currentRowChanged.connect(self.displayLM);
 		self.setWindowTitle('SPOC');
 		self.show();
 
-	def display(self,i):
+	def displayEM(self,i):
 		self.Stack.setCurrentIndex(i);
+
+	def displayLM(self,i):
+		self.Stack.setCurrentIndex(i+2);
 
 def main():
 

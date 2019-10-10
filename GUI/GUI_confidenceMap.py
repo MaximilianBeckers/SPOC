@@ -68,6 +68,14 @@ class ConfMapWindow(QWidget):
 		coordBox.addWidget(self.zCoord);
 		layout.addRow('Box coordinates [x][y][z]:', coordBox);
 
+		# add output directory
+		hbox_output = QHBoxLayout();
+		self.fileLine_output = QLineEdit();
+		searchButton_output = self.searchFileButton_output();
+		hbox_output.addWidget(self.fileLine_output);
+		hbox_output.addWidget(searchButton_output);
+		layout.addRow('Save output to ', hbox_output);
+
 		# make some space
 		layout.addRow('',QHBoxLayout());
 		layout.addRow('',QHBoxLayout());
@@ -107,6 +115,16 @@ class ConfMapWindow(QWidget):
 		if filename:
 			self.fileLine_localRes.setText(filename[0]);
 
+	def searchFileButton_output(self):
+		btn = QPushButton('Search File');
+		btn.clicked.connect(self.onInputFileButtonClicked_output);
+		return btn;
+
+	def onInputFileButtonClicked_output(self):
+		filename = QFileDialog.getExistingDirectory(caption='Set output directory');
+		if filename:
+			self.fileLine_output.setText(filename);
+
 	def quitButton(self):
 		btn = QPushButton('Quit');
 		btn.clicked.connect(QCoreApplication.instance().quit);
@@ -139,6 +157,9 @@ class ConfMapWindow(QWidget):
 
 		return btn;
 
+	#-----------------------------------------------------------
+	#------------------ run noise estima. check ----------------
+	#-----------------------------------------------------------
 	def checkNoiseEstimation(self):
 
 		print('Check background noise estimation ...');
@@ -154,7 +175,12 @@ class ConfMapWindow(QWidget):
 			return;
 
 		mapData = np.copy(map.data);
-		sizeMap = mapData.shape;
+
+		# set working directory and output filename
+		path = self.fileLine_output.text();
+		if path == '':
+			path = os.path.dirname(self.fileLine.text());
+		os.chdir(path);
 
 		try:
 			windowSize = int(self.boxSize.text());
@@ -262,7 +288,11 @@ class ConfMapWindow(QWidget):
 			return;
 
 
-		#set filename for output
+		# set working directory and output filename
+		path = self.fileLine_output.text();
+		if path == '':
+			path = os.path.dirname(self.fileLine.text());
+		os.chdir(path);
 		splitFilename = os.path.splitext(os.path.basename(self.fileLine.text()));
 
 		#*******************************************

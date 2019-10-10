@@ -34,7 +34,6 @@ class LocalFilteringWindow(QWidget):
 		layout.addRow('Local resolution map', hbox_locResMap);
 
 		layout.addRow('',QHBoxLayout());
-		layout.addRow('',QHBoxLayout());
 
 		# ------------ now optional input
 		layout.addRow(' ', QHBoxLayout()); # make some space
@@ -45,6 +44,14 @@ class LocalFilteringWindow(QWidget):
 		self.apix = QLineEdit();
 		self.apix.setText("None");
 		layout.addRow('Pixel size [A]', self.apix);
+
+		# add output directory
+		hbox_output = QHBoxLayout();
+		self.fileLine_output = QLineEdit();
+		searchButton_output = self.searchFileButton_output();
+		hbox_output.addWidget(self.fileLine_output);
+		hbox_output.addWidget(searchButton_output);
+		layout.addRow('Save output to ', hbox_output);
 
 		# make some space
 		layout.addRow('', QHBoxLayout());
@@ -82,6 +89,16 @@ class LocalFilteringWindow(QWidget):
 
 		if filename:
 			self.fileLine_locResMap.setText(filename[0][0]);
+
+	def searchFileButton_output(self):
+		btn = QPushButton('Search File');
+		btn.clicked.connect(self.onInputFileButtonClicked_output);
+		return btn;
+
+	def onInputFileButtonClicked_output(self):
+		filename = QFileDialog.getExistingDirectory(caption='Set output directory');
+		if filename:
+			self.fileLine_output.setText(filename);
 
 
 	def quitButton(self):
@@ -132,7 +149,11 @@ class LocalFilteringWindow(QWidget):
 		mapData = np.copy(em_map.data);
 		locResMapData = np.copy(locResMap.data);
 
-		# set output filename
+		# set working directory and output filename
+		path = self.fileLine_output.text();
+		if path == '':
+			path = os.path.dirname(self.fileLine.text());
+		os.chdir(path);
 		splitFilename = os.path.splitext(os.path.basename(self.fileLine.text()));
 		outputFilename_locallyFiltered = splitFilename[0] + "_locallyFiltered.mrc";
 

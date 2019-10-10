@@ -468,12 +468,15 @@ def writeFSC(resolutions, FSC, qValuesFDR, pValues, resolution):
 	plt.axhline(0.143, linewidth = 0.5, color = 'r');
 	plt.axhline(0.0, linewidth = 0.5, color = 'b');
 	plt.axvline(1.0/resolution, linewidth = 0.5, color = 'b');
-	
+
+	#add text with resolution
+	plt.text(0, 1.1, "Resolution at 1% FDR-FSC: {:.2f} Angstroem".format(resolution), fontsize=12);
+
 	plt.xlabel("1/resolution [1/A]");
 	plt.ylabel("FSC");
 	plt.legend();
 
-	plt.savefig('FSC.png', dpi=300);
+	plt.savefig('FSC.png', dpi=400);
 	plt.close();
 
 	#save txt file
