@@ -62,13 +62,13 @@ class Window(QWidget):
 
 		#set third line of GUI
 		logoEMBL = QLabel(self);
-		filename_logoEMBL = os.path.normcase(os.path.abspath("SPOC/GUI/images/EMBL_logo.png"));
+		filename_logoEMBL = os.path.normcase("/Users/mbeckers/Desktop/SPOC/GUI/EMBL_logo.png");
 		pixmap = QPixmap(filename_logoEMBL);
 		pixmap_scaled = pixmap.scaledToWidth(200);
 		logoEMBL.setPixmap(pixmap_scaled);
 
 		logoFZ = QLabel(self)
-		filename_logoFZ = os.path.normcase(os.path.abspath("SPOC/GUI/images/fz_logo.png"));
+		filename_logoFZ = os.path.normcase("/Users/mbeckers/Desktop/SPOC/GUI/fz_logo.png");
 		pixmap = QPixmap(filename_logoFZ);
 		pixmap_scaled = pixmap.scaledToWidth(200);
 		logoFZ.setPixmap(pixmap_scaled);
