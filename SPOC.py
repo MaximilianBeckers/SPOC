@@ -101,15 +101,19 @@ class Window(QWidget):
 		self.overallLayout.addLayout(self.bottomLayout);
 
 		self.setLayout(self.overallLayout);
-		self.leftlistEM.currentRowChanged.connect(self.displayEM);
-		self.leftlistLM.currentRowChanged.connect(self.displayLM);
+		self.leftlistEM.itemClicked.connect(self.displayEM);
+		self.leftlistLM.itemClicked.connect(self.displayLM);
 		self.setWindowTitle('SPOC');
 		self.show();
 
-	def displayEM(self,i):
+	def displayEM(self):
+		i = self.leftlistEM.currentRow();
+
 		self.Stack.setCurrentIndex(i);
 
-	def displayLM(self,i):
+	def displayLM(self):
+
+		i = self.leftlistLM.currentRow();
 		self.Stack.setCurrentIndex(i+4);
 
 def main():

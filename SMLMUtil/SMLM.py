@@ -230,7 +230,10 @@ class SMLM:
 		plt.axhline(0.0, linewidth=0.5, color='b');
 		plt.axvline(1.0/self.resolution, linewidth = 0.5, color='b');
 
-		plt.xlabel("1/ Resolution");
+		# add text with resolution
+		plt.text(0, 1.1, "Resolution at 1% FDR-FSC: {:.2f} nm".format(self.resolution), fontsize=12);
+
+		plt.xlabel("1/ Resolution [nm]");
 		plt.ylabel("FSC");
 		plt.legend();
 

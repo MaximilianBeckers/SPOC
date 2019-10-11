@@ -2,6 +2,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from SMLMUtil import SMLM
+from scipy import ndimage
 import numpy as np
 import time, os
 import matplotlib.pyplot as plt
@@ -23,7 +24,6 @@ class SMLMResolutionWindow(QWidget):
 		requiredLabel.setFont(QFont('Arial', 17));
 		layout.addRow(requiredLabel, QHBoxLayout());
 
-
 		# add input file
 		hbox_localizations = QHBoxLayout();
 		self.fileLine_localizations = QLineEdit();
@@ -35,7 +35,23 @@ class SMLMResolutionWindow(QWidget):
 		#or
 		orLabel = QLabel("or two half-images:", self);
 		orLabel.setFont(QFont('Arial', 15));
-		layout.addRow(orLabel, QHBoxLayout());
+		layout.addRow( '', orLabel);
+
+		# ------- read two images
+		# add input file
+		hbox_image1 = QHBoxLayout();
+		self.fileLine_image1 = QLineEdit();
+		searchButton_image1 = self.searchFileButton_image1();
+		hbox_image1.addWidget(self.fileLine_image1);
+		hbox_image1.addWidget(searchButton_image1);
+		layout.addRow('Image 1', hbox_image1);
+
+		hbox_image2 = QHBoxLayout();
+		self.fileLine_image2 = QLineEdit();
+		searchButton_image2 = self.searchFileButton_image2();
+		hbox_image2.addWidget(self.fileLine_image2);
+		hbox_image2.addWidget(searchButton_image2);
+		layout.addRow('Image 2', hbox_image2);
 
 
 		self.apix = QLineEdit();
@@ -84,6 +100,7 @@ class SMLMResolutionWindow(QWidget):
 		mainLayout.addLayout(buttonBox);
 		self.setLayout(mainLayout);
 
+	#button localizations
 	def searchFileButton_localizations(self):
 		btn = QPushButton('Search File');
 		btn.clicked.connect(self.onInputFileButtonClicked_localizations);
@@ -95,7 +112,31 @@ class SMLMResolutionWindow(QWidget):
 		if filename:
 			self.fileLine_localizations.setText(filename[0]);
 
+	#button image1
+	def searchFileButton_image1(self):
+		btn = QPushButton('Search File');
+		btn.clicked.connect(self.onInputFileButtonClicked_image1);
+		return btn;
 
+	def onInputFileButtonClicked_image1(self):
+		filename = QFileDialog.getOpenFileName(caption='Open file');
+
+		if filename:
+			self.fileLine_image1.setText(filename[0]);
+
+	#button image2
+	def searchFileButton_image2(self):
+		btn = QPushButton('Search File');
+		btn.clicked.connect(self.onInputFileButtonClicked_image2);
+		return btn;
+
+	def onInputFileButtonClicked_image2(self):
+		filename = QFileDialog.getOpenFileName(caption='Open file');
+
+		if filename:
+			self.fileLine_image2.setText(filename[0]);
+
+	#button output
 	def searchFileButton_output(self):
 		btn = QPushButton('Search File');
 		btn.clicked.connect(self.onInputFileButtonClicked_output);
@@ -106,6 +147,7 @@ class SMLMResolutionWindow(QWidget):
 		if filename:
 			self.fileLine_output.setText(filename);
 
+	#button to quit
 	def quitButton(self):
 		btn = QPushButton('Quit');
 		btn.clicked.connect(QCoreApplication.instance().quit);
@@ -148,17 +190,26 @@ class SMLMResolutionWindow(QWidget):
 		os.chdir(path);
 
 
-		#read the localizations
+		#read the input
+		image1 = None;
+		image2 = None;
 		try:
 			localizations = np.loadtxt(self.fileLine_localizations.text(), delimiter="	", skiprows=1, usecols=(4, 5));
 		except:
-			msg = QMessageBox();
-			msg.setIcon(QMessageBox.Information);
-			msg.setText("Cannot read file ...");
-			msg.setWindowTitle("Error");
-			msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel);
-			retval = msg.exec_();
-			return;
+
+			try:
+				image1 = ndimage.imread(self.fileLine_image1.text());
+				image2 = ndimage.imread(self.fileLine_image1.text());
+				localizations = None;
+			except:
+
+				msg = QMessageBox();
+				msg.setIcon(QMessageBox.Information);
+				msg.setText("Cannot the input ...");
+				msg.setWindowTitle("Error");
+				msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel);
+				retval = msg.exec_();
+				return;
 
 		#read the pixel size
 		try:
@@ -173,7 +224,7 @@ class SMLMResolutionWindow(QWidget):
 			return;
 
 		SMLMObject = SMLM.SMLM();
-		SMLMObject.resolution(localizations, None, None, apix);
+		SMLMObject.resolution(localizations, image1, image2, apix);
 
 		plt.imshow(SMLMObject.fullMap.T, cmap='hot', origin='lower')
 		plt.colorbar();
