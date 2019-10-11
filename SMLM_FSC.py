@@ -83,7 +83,6 @@ def main():
 		else:
 			SMLMObject.localResolution(None, image1, image2, args.apix, stepSize, boxSize, args.lowRes);
 
-
 	#************************
 	#***** plot images ******
 	#************************

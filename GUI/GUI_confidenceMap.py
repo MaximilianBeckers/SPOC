@@ -17,6 +17,13 @@ class ConfMapWindow(QWidget):
 		super(ConfMapWindow, self).__init__();
 		layout = QFormLayout();
 
+		# ------------ now required input
+		layout.addRow(' ', QHBoxLayout()); # make some space
+		requiredLabel = QLabel("Required Input", self);
+		requiredLabel.setFont(QFont('Arial', 17));
+		layout.addRow(requiredLabel, QHBoxLayout());
+
+
 		# add input file
 		hbox = QHBoxLayout();
 		self.fileLine = QLineEdit();
@@ -79,6 +86,8 @@ class ConfMapWindow(QWidget):
 		# make some space
 		layout.addRow('',QHBoxLayout());
 		layout.addRow('',QHBoxLayout());
+		layout.addRow('', QHBoxLayout());
+		layout.addRow('', QHBoxLayout());
 
 		# some buttons
 		qtBtn = self.quitButton();
@@ -91,8 +100,20 @@ class ConfMapWindow(QWidget):
 		buttonBox.addWidget(runBtn);
 		buttonBox.addWidget(checkBtn);
 
-		layout.addRow(' ', buttonBox);
-		self.setLayout(layout);
+		formGroupBox = QGroupBox();
+		formGroupBox.setLayout(layout);
+
+		#set the main Layout
+		heading = QLabel("Calculate confidence maps", self);
+		heading.setFont(QFont('Arial', 15));
+		heading.setAlignment(Qt.AlignTop);
+
+		mainLayout = QVBoxLayout();
+		mainLayout.addWidget(heading);
+		mainLayout.addWidget(formGroupBox);
+		mainLayout.addLayout(buttonBox);
+		self.setLayout(mainLayout);
+
 
 	def searchFileButton_inputFilename(self):
 		btn = QPushButton('Search File');
