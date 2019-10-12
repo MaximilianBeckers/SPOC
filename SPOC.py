@@ -2,14 +2,39 @@ import sys, os
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-from GUI import GUI_localFiltering, GUI_resolutions, GUI_confidenceMap, GUI_localResolution, GUI_SMLM
+from GUI import GUI_localFiltering, GUI_resolutions, GUI_confidenceMap, GUI_localResolution, GUI_SMLM, GUI_SMLM_localResolution
+
+import matplotlib
+matplotlib.use('Qt5Agg') # Make sure that we are using QT5
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import matplotlib.pyplot as plt
+
 
 class Window(QWidget):
 
 	def __init__(self):
 
+		#set path for images
+		if getattr(sys, 'frozen', False):
+			# we are running in a bundle
+			path = sys.executable;
+			path = os.path.dirname(path);
+		else:
+			# we are running in a normal Python environment
+			path = os.path.dirname(os.path.abspath(__file__)) + "/GUI";
+
 		super(Window, self).__init__();
 
+
+		"""#set backgorund
+		oImage = QImage(path + "/TMV_in_acid.jpg")
+		oImage = oImage.scaled(QSize(1000, 1000))  # resize Image to widgets size
+		palette = QPalette()
+		palette.setBrush(self.backgroundRole(), QBrush(oImage))  # 10 = Windowrole
+		self.setPalette(palette)
+		self.setWindowOpacity(0.93)
+		self.setStyleSheet("color: white;")
+		"""
 
 		#set first line of GUI
 		self.nameLabel = QLabel("Statistical Processing of cryo-EM maps", self);
@@ -49,6 +74,7 @@ class Window(QWidget):
 		self.stack3 = GUI_localFiltering.LocalFilteringWindow();
 		self.stack4 = GUI_confidenceMap.ConfMapWindow();
 		self.stack5 = GUI_SMLM.SMLMResolutionWindow();
+		self.stack6 = GUI_SMLM_localResolution.SMLMLocalResolutionWindow();
 
 
 		self.Stack = QStackedWidget(self);
@@ -57,6 +83,7 @@ class Window(QWidget):
 		self.Stack.addWidget(self.stack3);
 		self.Stack.addWidget(self.stack4);
 		self.Stack.addWidget(self.stack5);
+		self.Stack.addWidget(self.stack6);
 
 		self.mainLayout = QHBoxLayout();
 		self.mainLayout.addLayout(self.leftLayout);
@@ -64,13 +91,6 @@ class Window(QWidget):
 
 
 
-		if getattr(sys, 'frozen', False):
-			# we are running in a bundle
-			path = sys.executable;
-			path = os.path.dirname(path);
-		else:
-			# we are running in a normal Python environment
-			path = os.path.dirname(os.path.abspath(__file__)) + "/GUI";
 
 		#set third line of GUI
 		logoEMBL = QLabel(self);
