@@ -160,7 +160,7 @@ class ResolutionWindow(QWidget):
 
 	def FSCBtn(self):
 
-		btn = QPushButton('Run local FSC');
+		btn = QPushButton('Run');
 		btn.resize(btn.minimumSizeHint());
 		btn.clicked.connect(self.runLocalFSC);
 

@@ -26,7 +26,7 @@ class Window(QWidget):
 		super(Window, self).__init__();
 
 
-		"""#set backgorund
+		""""#set backgorund
 		oImage = QImage(path + "/TMV_in_acid.jpg")
 		oImage = oImage.scaled(QSize(1000, 1000))  # resize Image to widgets size
 		palette = QPalette()
@@ -37,11 +37,15 @@ class Window(QWidget):
 		"""
 
 		#set first line of GUI
-		self.nameLabel = QLabel("Statistical Processing of cryo-EM maps", self);
-		self.nameLabel.setFont(QFont('Helvetica', 25));
+		logo = QLabel(self);
+		filename_logo = os.path.normcase(path + "/Logo.png");
+		pixmap = QPixmap(filename_logo);
+		pixmap_scaled = pixmap.scaledToWidth(320);
+		logo.setPixmap(pixmap_scaled);
 
 		self.captionLayout = QHBoxLayout();
-		self.captionLayout.addWidget(self.nameLabel);
+		#self.captionLayout.addStretch(1);
+		self.captionLayout.addWidget(logo);
 		self.captionLayout.addStretch(1);
 
 		#set second line of GUI

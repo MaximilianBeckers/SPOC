@@ -104,7 +104,7 @@ class ConfMapWindow(QWidget):
 		formGroupBox.setLayout(layout);
 
 		#set the main Layout
-		heading = QLabel("Calculate confidence maps", self);
+		heading = QLabel("Calculate Confidence maps", self);
 		heading.setFont(QFont('Arial', 15));
 		heading.setAlignment(Qt.AlignTop);
 

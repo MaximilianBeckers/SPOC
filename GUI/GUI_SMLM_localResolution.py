@@ -170,7 +170,7 @@ class SMLMLocalResolutionWindow(QWidget):
 
 	def FSCBtn(self):
 
-		btn = QPushButton('Run FSC');
+		btn = QPushButton('Run');
 		btn.resize(btn.minimumSizeHint());
 		btn.clicked.connect(self.runFSC);
 
