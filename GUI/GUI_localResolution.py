@@ -56,15 +56,15 @@ class ResolutionWindow(QWidget):
 
 		self.stepSize = QLineEdit();
 		self.stepSize.setText('5');
-		layout.addRow('stepSize', self.stepSize);
+		layout.addRow('Step size of sliding window [pixels]', self.stepSize);
 
 		self.w = QLineEdit();
 		self.w.setText('20');
-		layout.addRow('Window size', self.w);
+		layout.addRow('Size of sliding window [pixels]', self.w);
 
 		self.lowRes = QLineEdit();
 		self.lowRes.setText('None');
-		layout.addRow('Low resolution bound', self.lowRes);
+		layout.addRow('Low resolution limit [A]', self.lowRes);
 
 		# make some space
 		layout.addRow('', QHBoxLayout());

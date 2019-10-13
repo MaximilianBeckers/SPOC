@@ -35,7 +35,7 @@ class ConfMapWindow(QWidget):
 		# add box size for background noise estimation
 		self.boxSize = QLineEdit();
 		self.boxSize.setText('50');
-		layout.addRow('Box size:', self.boxSize);
+		layout.addRow('Size of window for background estimation [pixels]:', self.boxSize);
 
 
 		# ------------ now optional input
