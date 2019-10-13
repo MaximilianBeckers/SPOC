@@ -104,7 +104,7 @@ class SMLMLocalResolutionWindow(QWidget):
 
 		#set the main Layout
 		heading = QLabel("Global resolution estimation by FDR-FSC", self);
-		heading.setFont(QFont('Arial', 15));
+		heading.setFont(QFont('Arial', 17));
 		heading.setAlignment(Qt.AlignTop);
 
 		mainLayout = QVBoxLayout();
@@ -266,16 +266,15 @@ class SMLMLocalResolutionWindow(QWidget):
 		SMLMObject = SMLM.SMLM();
 		SMLMObject.localResolution(localizations, image1, image2, apix, stepSize, windowSize, lowResLimit);
 
-
 		# plot the local resolutions
 		plt.imshow(SMLMObject.localResolutions.T, cmap='hot', origin='lower');
-		plt.colorbar();
-		plt.savefig('localResolutions.png', dpi=300);
+		#plt.colorbar();
+		plt.savefig('localResolutions.png');
 		plt.close();
 
 		plt.imshow(SMLMObject.filteredMap.T, cmap='hot', origin='lower')
-		plt.colorbar();
-		plt.savefig('heatMap_filt.png', dpi=300);
+		#plt.colorbar();
+		plt.savefig('heatMap_filt.png');
 		plt.close();
 
 		self.showMessageBox(path);

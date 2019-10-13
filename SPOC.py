@@ -4,11 +4,6 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from GUI import GUI_localFiltering, GUI_resolutions, GUI_confidenceMap, GUI_localResolution, GUI_SMLM, GUI_SMLM_localResolution
 
-import matplotlib
-matplotlib.use('Qt5Agg') # Make sure that we are using QT5
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-import matplotlib.pyplot as plt
-
 
 class Window(QWidget):
 
@@ -51,7 +46,7 @@ class Window(QWidget):
 		#set second line of GUI
 		#---------------------------------------------
 		self.EMlabel = QLabel("cryo-EM", self);
-		self.EMlabel.setFont(QFont('Arial', 15));
+		self.EMlabel.setFont(QFont('Arial', 17));
 
 		self.leftlistEM = QListWidget();
 		self.leftlistEM.insertItem(0, 'Global resolution estimation by FDR-FSC');
@@ -60,7 +55,7 @@ class Window(QWidget):
 		self.leftlistEM.insertItem(3, 'Confidence maps');
 
 		self.LMlabel = QLabel("Single Molecule Localization Microscopy", self);
-		self.LMlabel.setFont(QFont('Arial', 15));
+		self.LMlabel.setFont(QFont('Arial', 17));
 
 		self.leftlistLM = QListWidget();
 		self.leftlistLM.insertItem(0, 'Global resolution estimation by FDR-FSC');
@@ -100,13 +95,13 @@ class Window(QWidget):
 		logoEMBL = QLabel(self);
 		filename_logoEMBL = os.path.normcase(path + "/EMBL_logo.png");
 		pixmap = QPixmap(filename_logoEMBL);
-		pixmap_scaled = pixmap.scaledToWidth(200);
+		pixmap_scaled = pixmap.scaledToWidth(150);
 		logoEMBL.setPixmap(pixmap_scaled);
 
 		logoFZ = QLabel(self)
 		filename_logoFZ = os.path.normcase(path + "/fz_logo.png");
 		pixmap = QPixmap(filename_logoFZ);
-		pixmap_scaled = pixmap.scaledToWidth(200);
+		pixmap_scaled = pixmap.scaledToWidth(150);
 		logoFZ.setPixmap(pixmap_scaled);
 
 

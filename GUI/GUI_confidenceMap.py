@@ -105,7 +105,7 @@ class ConfMapWindow(QWidget):
 
 		#set the main Layout
 		heading = QLabel("Calculate Confidence maps", self);
-		heading.setFont(QFont('Arial', 15));
+		heading.setFont(QFont('Arial', 17));
 		heading.setAlignment(Qt.AlignTop);
 
 		mainLayout = QVBoxLayout();

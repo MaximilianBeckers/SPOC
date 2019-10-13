@@ -398,6 +398,7 @@ def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
 #--------------------------------------------------------
 def doPermutations(tmpSample2, tmpSample1ComplexConj, numPermutations, tmpFSCdenominator, trueFSC):
 
+
 	prevPValue = 0.0;
 	permutedCorCoeffs = np.zeros(0);
 	itNumPermutations = 200;  #check p-value every 200 permutations

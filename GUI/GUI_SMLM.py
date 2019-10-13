@@ -91,7 +91,7 @@ class SMLMResolutionWindow(QWidget):
 
 		#set the main Layout
 		heading = QLabel("Global resolution estimation by FDR-FSC", self);
-		heading.setFont(QFont('Arial', 15));
+		heading.setFont(QFont('Arial', 17));
 		heading.setAlignment(Qt.AlignTop);
 
 		mainLayout = QVBoxLayout();
