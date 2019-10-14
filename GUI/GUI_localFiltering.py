@@ -104,7 +104,6 @@ class LocalFilteringWindow(QWidget):
 		layout.addRow(' ', QHBoxLayout());  # make some space
 		layout.addRow(' ', QHBoxLayout());  # make some space
 		layout.addRow(' ', QHBoxLayout());  # make some space
-		layout.addRow(' ', QHBoxLayout());  # make some space
 
 		# some buttons
 		qtBtn = self.quitButton();

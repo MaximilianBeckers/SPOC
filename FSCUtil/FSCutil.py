@@ -6,7 +6,7 @@ import sys
 import pyfftw
 import multiprocessing
 
-#-----------------------------------------------------
+#--------------------------------------------------------------
 def calculate_frequency_map(map):
 
 	#*********************************************************
@@ -60,6 +60,72 @@ def calculate_frequency_map(map):
 		frequencyMap = np.sqrt(freqMapi + freqMapj);
 
 	return frequencyMap;
+
+#--------------------------------------------------------------
+def makeIndexVolumes(map):
+
+	#***********************************************************
+	#*** calculation of the angles for each voxel in the FFT ***
+	#***********************************************************
+
+	sizeMap = map.shape;
+
+	if map.ndim == 3:
+		# calc indices for each voxel
+		indI = np.fft.fftfreq(sizeMap[0], 1.0)*sizeMap[0];
+		indJ = np.fft.fftfreq(sizeMap[1], 1.0)*sizeMap[1];
+		indK = np.fft.rfftfreq(sizeMap[2], 1.0)*sizeMap[2];
+
+		sizeFFT = np.array([indI.size, indJ.size, indK.size]);
+		FFT = np.zeros(sizeFFT);
+
+		indMapI = np.copy(FFT);
+		for j in range(sizeFFT[1]):
+			for k in range(sizeFFT[2]):
+				indMapI[:, j, k] = indI;
+
+		indMapJ = np.copy(FFT);
+		for i in range(sizeFFT[0]):
+			for k in range(sizeFFT[2]):
+				indMapJ[i, :, k] = indJ;
+
+		indMapK = np.copy(FFT);
+		for i in range(sizeFFT[0]):
+			for j in range(sizeFFT[1]):
+				indMapK[i, j, :] = indK;
+
+		radiusMap = np.sqrt(indMapI**2 + indMapJ**2 + indMapK**2);
+
+		#transform the indices to spherical coordinates
+		hxy = np.hypot(indMapI, indMapJ)
+		azimuth = np.arctan2(indMapJ, indMapI) * 180.0/np.pi;
+		polar = np.arctan2(indMapK, hxy) * 180.0/np.pi;
+
+	elif map.ndim == 2:
+		# calc frequency for each voxel
+		indI = np.fft.fftfreq(sizeMap[0], 1.0);
+		indJ = np.fft.rfftfreq(sizeMap[1], 1.0);
+
+		sizeFFT = np.array([indI.size, indJ.size]);
+		FFT = np.zeros(sizeFFT);
+
+		indMapI = np.copy(FFT);
+		for j in range(sizeFFT[1]):
+			indMapI[:, j] = indI;
+
+		indMapJ = np.copy(FFT);
+		for i in range(sizeFFT[0]):
+			indMapJ[i, :] = indJ;
+
+		radiusMap = np.sqrt(indMapI**2 + indMapJ**2);
+
+		#transform the indices to polar coordinates
+		azimuth = np.arctan2(indMapJ, indMapI)
+		polar = None;
+
+
+	return azimuth, polar;
+
 
 #---------------------------------------------------------------------------------
 def makeCircularMask(map, sphereRadius):
@@ -301,6 +367,142 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 
 	return res, FSC, percentCutoffs, pVals, qVals_FDR, resolution_FDR, tmpPermutedCorCoeffs;
 
+
+#--------------------------------------------------------
+def threeDimensionalFSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verbose, permutedCorCoeffs, SMLM):
+
+
+	#***********************************************
+	#***** function that calculates the 3D FSC *****
+	#***********************************************
+
+	if localRes:
+		maskCoeff = 0.23;
+	elif SMLM:
+		maskCoeff = 0.6;
+	else:
+		maskCoeff = 0.7;
+
+	if maskData is not None:
+		halfMap1 = halfMap1*maskData;
+		halfMap2 = halfMap2*maskData;
+
+	sizeMap = halfMap1.shape;
+
+	#calculate spherical coordinates for each voxel in FFT
+	azimuthAngleMap, polarAngleMap = makeIndexVolumes(halfMap1);
+
+	# calculate frequency map
+	freqMap = calculate_frequency_map(halfMap1);
+	freqMap = freqMap / float(apix);
+
+	# do fourier transforms
+	fftObject_half1 = pyfftw.builders.rfftn(halfMap1);
+	fftObject_half2 = pyfftw.builders.rfftn(halfMap2);
+	fft_half1 = fftObject_half1(halfMap1);
+	fft_half2 = fftObject_half2(halfMap2);
+
+	res = np.fft.rfftfreq(sizeMap[0], 1.0);
+	res = res/float(apix);
+	numRes = res.shape[0];
+
+	resSpacing = (res[1] - res[0])/2.0;
+
+	#initialize data
+	FSC = np.ones((res.shape[0]));
+	pVals = np.zeros((res.shape[0]));
+	directionalResolutions = [];
+	phiArray = [];
+	thetaArray = [];
+	samplingAngles = 10;
+	angleSpacing = 10;
+	directionalResolutionHeatmap = np.zeros((samplingAngles, samplingAngles));
+
+	phiIndex = 0;
+	thetaIndex = 0;
+
+	#phi is azimuth (-pi, pi), theta is polar angle (0,pi), 100 sampling points each
+	for phi in np.linspace(-np.pi, np.pi, samplingAngles):
+
+		thetaIndex = 0;
+		for theta in np.linspace(0, np.pi, samplingAngles):
+
+			for i in range(res.shape[0]):
+
+				tmpRes = res[i];
+				resShell_half1 = fft_half1[((tmpRes - resSpacing) < freqMap) & (freqMap < (tmpRes + resSpacing)) & (azimuthAngleMap > (phi-angleSpacing)) & (azimuthAngleMap < (phi+angleSpacing)) & (polarAngleMap > (theta-angleSpacing)) & (polarAngleMap < (theta+angleSpacing))];
+				resShell_half2 = fft_half2[((tmpRes - resSpacing) < freqMap) & (freqMap < (tmpRes + resSpacing)) & (azimuthAngleMap > (phi-angleSpacing)) & (azimuthAngleMap < (phi+angleSpacing)) & (polarAngleMap > (theta-angleSpacing)) & (polarAngleMap < (theta+angleSpacing))];
+
+				FSC[i] = correlationCoefficient(resShell_half1, resShell_half2);
+
+				if (permutedCorCoeffs is not None):  # for local resolution estimation
+					tmpCorCoeffs = permutedCorCoeffs[i];
+					pVals[i] = (tmpCorCoeffs[tmpCorCoeffs > FSC[i]].shape[0]) / (float(tmpCorCoeffs.shape[0]));
+					tmpPermutedCorCoeffs = None;
+				else:
+					pVals[i], _, _, _, _ = permutationTest(
+						resShell_half1, resShell_half2, numAsymUnits, maskCoeff);
+
+
+			# do FDR control of p-Values
+			qVals_FDR = FDRutil.pAdjust(pVals, 'BY');
+
+			tmpFSC = np.copy(FSC);
+			tmpFSC[tmpFSC > cutoff] = 1.0;
+			tmpFSC[tmpFSC <= cutoff] = 0.0;
+			tmpFSC = 1.0 - tmpFSC;
+			tmpFSC[0] = 0.0;
+
+			try:
+				resolution = np.min(np.argwhere(tmpFSC)) - 1;
+
+				if resolution < 0:
+					resolution = 0.0;
+				else:
+					if res[int(resolution)] == 0.0:
+						resolution = 0.0;
+					else:
+						tmpFreq = res[int(resolution)]  # + (res[resolution+1] - res[resolution])/2.0;
+						resolution = float(1.0 / tmpFreq);
+			except:
+				resolution = 2.0 * apix;
+
+			threshQVals = np.copy(qVals_FDR);
+			threshQVals[threshQVals <= 0.01] = 0.0;  # signal
+			threshQVals[threshQVals > 0.01] = 1.0  # no signal
+
+			try:
+				resolution_FDR = np.min(np.argwhere(threshQVals)) - 1;
+
+				if resolution_FDR < 0:
+					resolution_FDR = 0.0;
+				else:
+					if res[int(resolution_FDR)] == 0.0:
+						resolution_FDR = 0.0;
+					else:
+						tmpFreq = res[int(resolution_FDR)]  # + (res[resolution_FDR + 1] - res[resolution_FDR]) / 2.0;
+						resolution_FDR = float(1.0 / tmpFreq);
+			except:
+				resolution_FDR = 2.0 * apix;
+
+			#append the resolutions
+			directionalResolutionHeatmap[phiIndex, thetaIndex] = resolution_FDR;
+			np.append(directionalResolutions, resolution_FDR);
+			np.append(phiArray, phi);
+			np.append(thetaArray, theta);
+
+			thetaIndex = thetaIndex + 1;
+
+		phiIndex = phiIndex + 1;
+
+		# print progress
+		progress = phiIndex / float(samplingAngles);
+		if phiIndex % (int(math.ceil(samplingAngles / 20.0))) == 0:
+			output = "%.1f" % (progress * 100) + "% finished ...";
+			print(output);
+
+	return phiArray, thetaArray, directionalResolutions, directionalResolutionHeatmap;
+
 #--------------------------------------------------------
 def correlationCoefficient(sample1, sample2):
 
@@ -389,7 +591,6 @@ def permutationTest(sample1, sample2, numAsymUnits, maskCoeff):
 			pValue = 1.0;
 		else:
 			pValue = 0.0;
-
 
 		percentCutoffs = np.ones(percentCutoffs.shape);
 
