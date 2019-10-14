@@ -76,12 +76,19 @@ def localFiltration(map, locResMap, apix, localVariance, windowSize, boxCoord, E
 			#do local filtration
 			tmpFilteredMapData = FDRutil.lowPassFilter(mapFFT, frequencyMap, tmpRes, map.shape);
 
+			#do normalization
+			#tmpFilteredMapData = (tmpFilteredMapData - np.mean(tmpFilteredMapData))/np.sqrt(np.var(tmpFilteredMapData));
+
 			#set the filtered voxels
 			filteredMapData[indices] = tmpFilteredMapData[indices];
 		else:
 
 			#do local filtration
 			tmpFilteredMapData = FDRutil.lowPassFilter(mapFFT, frequencyMap, tmpRes, map.shape);
+
+			#do normalization
+			#tmpFilteredMapData = (tmpFilteredMapData - np.mean(tmpFilteredMapData))/np.sqrt(np.var(tmpFilteredMapData));
+
 			#set the filtered voxels
 			filteredMapData[indices] = tmpFilteredMapData[indices];
 
@@ -99,6 +106,7 @@ def localFiltration(map, locResMap, apix, localVariance, windowSize, boxCoord, E
 				tmpMean, tmpVar, _ = FDRutil.estimateNoiseFromMap(tmpFilteredMapData, windowSize, boxCoord);
 				mean[indices] = tmpMean;
 				var[indices] = tmpVar;
+
 	print("Local filtering finished ...");
 
 	return filteredMapData, mean, var, ECDFmap;

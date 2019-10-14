@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-from confidenceMapUtil import mapUtil
+from confidenceMapUtil import mapUtil, FDRutil
 import mrcfile
 import numpy as np
 import time, os
@@ -42,15 +42,22 @@ class LocalFilteringWindow(QWidget):
 
 		layout.addRow('',QHBoxLayout());
 
-		# ------------ now optional input
+		#--------------------------------------------------
+		# ------------ now optional input -----------------
+		#--------------------------------------------------
 		layout.addRow(' ', QHBoxLayout()); # make some space
 		optionLabel = QLabel("Optional Input", self);
 		optionLabel.setFont(QFont('Arial', 17));
 		layout.addRow(optionLabel, QHBoxLayout());
 
+
+
+		#------------------------------------
+		#apix option
 		self.apix = QLineEdit();
 		self.apix.setText("None");
 		layout.addRow('Pixel size [A]', self.apix);
+
 
 		# add output directory
 		hbox_output = QHBoxLayout();
@@ -60,6 +67,37 @@ class LocalFilteringWindow(QWidget):
 		hbox_output.addWidget(searchButton_output);
 		layout.addRow('Save output to ', hbox_output);
 
+
+		#-----------------------------------
+		#local normalization option
+		self.localNormalization = QCheckBox(self);
+		self.localNormalization.stateChanged.connect(self.localNormalizationState);
+		layout.addRow('Do local background normalization?', self.localNormalization);
+
+		# add box size for background noise estimation
+		self.boxSize = QLineEdit();
+		self.boxSize.setText('50');
+		self.boxSizeText = QLabel('Size of window for background estimation [pixels]:');
+		self.boxSize.setVisible(False);
+		self.boxSizeText.setVisible(False)
+		#layout.addRow('Size of window for background estimation [pixels]:', self.boxSize);
+		layout.addRow(self.boxSizeText, self.boxSize);
+
+		# add box coordinates
+		self.coordBox = QHBoxLayout();
+		self.xCoord = QLineEdit();
+		self.yCoord = QLineEdit();
+		self.zCoord = QLineEdit();
+		self.xCoord.setText('None'), self.yCoord.setText('None'), self.zCoord.setText('None');
+		self.coordBox.addWidget(self.xCoord);
+		self.coordBox.addWidget(self.yCoord);
+		self.coordBox.addWidget(self.zCoord);
+		self.boxCoordText = QLabel('Box coordinates [x][y][z]:');
+		self.boxCoordText.setVisible(False)
+		self.xCoord.setVisible(False);
+		self.yCoord.setVisible(False);
+		self.zCoord.setVisible(False);
+		layout.addRow(self.boxCoordText, self.coordBox);
 
 		layout.addRow(' ', QHBoxLayout());  # make some space
 		layout.addRow(' ', QHBoxLayout());  # make some space
@@ -71,10 +109,13 @@ class LocalFilteringWindow(QWidget):
 		# some buttons
 		qtBtn = self.quitButton();
 		runBtn = self.runBtn();
+		self.checkNoiseBtn = self.checkNoiseEstimationBtn();
+		self.checkNoiseBtn.setVisible(False);
 
 		buttonBox = QHBoxLayout();
 		buttonBox.addWidget(qtBtn);
 		buttonBox.addWidget(runBtn);
+		buttonBox.addWidget(self.checkNoiseBtn)
 
 		formGroupBox = QGroupBox();
 		formGroupBox.setLayout(layout);
@@ -138,6 +179,25 @@ class LocalFilteringWindow(QWidget):
 
 		return btn;
 
+	#--------------------------------------------------------
+	def checkNoiseEstimationBtn(self):
+		btn = QPushButton('Check Noise Estim.');
+		btn.clicked.connect(self.checkNoiseEstimation);
+		self.dialogs = list();
+		btn.resize(btn.minimumSizeHint());
+
+		return btn;
+
+	def localNormalizationState(self):
+
+		self.boxSizeText.setVisible(self.localNormalization.isChecked());
+		self.boxSize.setVisible(self.localNormalization.isChecked());
+		self.boxCoordText.setVisible(self.localNormalization.isChecked());
+		self.xCoord.setVisible(self.localNormalization.isChecked())
+		self.yCoord.setVisible(self.localNormalization.isChecked())
+		self.zCoord.setVisible(self.localNormalization.isChecked())
+		self.checkNoiseBtn.setVisible(self.localNormalization.isChecked())
+
 	def showMessageBox(self):
 		msg = QMessageBox();
 		msg.setIcon(QMessageBox.Information);
@@ -200,9 +260,44 @@ class LocalFilteringWindow(QWidget):
 			apix = apixMap;
 
 
+		#**************************************
+		#**** get noise estimation input ******
+		#**************************************
+		if self.localNormalization.isChecked():
+
+			# ****************************************
+			# ************ set the noiseBox **********
+			# ****************************************
+			try:
+				boxCoord = [int(self.xCoord.text()), int(self.yCoord.text()), int(self.zCoord.text())];
+			except:
+				boxCoord = 0;
+
+			# ******************************************
+			# ************ set the windowSize **********
+			# ******************************************
+			try:
+				windowSize = int(self.boxSize.text());
+			except:
+				print("Window size needs to be a positive integer ...");
+				return;
+
+			localVariance = True;
+		else:
+			localVariance = False;
+			windowSize = None;
+			boxCoord = None;
+
+
+
 		#do the local filtering
-		locFiltMap, _, _, _ = mapUtil.localFiltration(mapData, locResMapData, apix, False, None,
-															None, None);
+		locFiltMap, meanMap, varMap, _ = mapUtil.localFiltration(mapData, locResMapData, apix, localVariance, windowSize,
+															boxCoord, None);
+
+		#if background normalization to be done, then do so
+		if localVariance:
+			locFiltMap = FDRutil.studentizeMap(locFiltMap, meanMap, varMap);
+
 
 		# write the local resolution map
 		localFiltMapMRC = mrcfile.new(outputFilename_locallyFiltered, overwrite=True);
@@ -218,3 +313,66 @@ class LocalFilteringWindow(QWidget):
 		print("Runtime: %.2f" % totalRuntime);
 
 		self.showMessageBox();
+
+	# -----------------------------------------------------------
+	# ------------------ run noise estima. check ----------------
+	# -----------------------------------------------------------
+	def checkNoiseEstimation(self):
+
+		print('Check background noise estimation ...');
+		try:
+			map = mrcfile.open(self.fileLine.text(), mode='r');
+		except:
+			msg = QMessageBox();
+			msg.setIcon(QMessageBox.Information);
+			msg.setText("Cannot read file ...");
+			msg.setWindowTitle("Error");
+			msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel);
+			retval = msg.exec_();
+			return;
+
+		mapData = np.copy(map.data);
+
+		# set working directory and output filename
+		path = self.fileLine_output.text();
+		if path == '':
+			path = os.path.dirname(self.fileLine.text());
+		os.chdir(path);
+
+		try:
+			windowSize = int(self.boxSize.text());
+		except:
+			print("Window size needs to be a positive integer ...")
+			return;
+
+		try:
+			boxCoord = [int(self.xCoord.text()), int(self.yCoord.text()), int(self.zCoord.text())];
+		except:
+			boxCoord = 0;
+
+		# generate the diagnostic image
+		pp = mapUtil.makeDiagnosticPlot(mapData, windowSize, False, boxCoord);
+		pp.savefig('diag_image.png');
+
+		# now show the diagnostic image in new window
+		dialog = NoiseWindow(self)
+		self.dialogs.append(dialog);
+		dialog.show();
+
+#-------------------------------------------------------
+#------ window for background noise estimation ---------
+#-------------------------------------------------------
+
+class NoiseWindow(QWidget):
+	def __init__(self, parent=None):
+		super(NoiseWindow, self).__init__();
+
+		self.label = QLabel(self)
+		self.label.setPixmap(QPixmap("diag_image.png"));
+
+		vbox = QVBoxLayout()
+		vbox.addWidget(self.label);
+		self.setLayout(vbox)
+
+		self.setWindowTitle("Check background noise estimation")
+		self.show()

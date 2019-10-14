@@ -23,7 +23,7 @@ class Window(QWidget):
 
 		""""#set backgorund
 		oImage = QImage(path + "/TMV_in_acid.jpg")
-		oImage = oImage.scaled(QSize(1000, 1000))  # resize Image to widgets size
+		oImage = oImage.scaled(QSize(1500, 1500))  # resize Image to widgets size
 		palette = QPalette()
 		palette.setBrush(self.backgroundRole(), QBrush(oImage))  # 10 = Windowrole
 		self.setPalette(palette)
@@ -89,19 +89,17 @@ class Window(QWidget):
 		self.mainLayout.addWidget(self.Stack);
 
 
-
-
 		#set third line of GUI
 		logoEMBL = QLabel(self);
 		filename_logoEMBL = os.path.normcase(path + "/EMBL_logo.png");
 		pixmap = QPixmap(filename_logoEMBL);
-		pixmap_scaled = pixmap.scaledToWidth(150);
+		pixmap_scaled = pixmap.scaledToWidth(200);
 		logoEMBL.setPixmap(pixmap_scaled);
 
 		logoFZ = QLabel(self)
 		filename_logoFZ = os.path.normcase(path + "/fz_logo.png");
 		pixmap = QPixmap(filename_logoFZ);
-		pixmap_scaled = pixmap.scaledToWidth(150);
+		pixmap_scaled = pixmap.scaledToWidth(200);
 		logoFZ.setPixmap(pixmap_scaled);
 
 
