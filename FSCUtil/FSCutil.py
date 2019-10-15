@@ -1,5 +1,6 @@
 import numpy as np
-from confidenceMapUtil import FDRutil 
+from confidenceMapUtil import FDRutil
+from scipy.interpolate import RegularGridInterpolator
 import matplotlib.pyplot as plt
 import math
 import sys
@@ -94,12 +95,12 @@ def makeIndexVolumes(map):
 			for j in range(sizeFFT[1]):
 				indMapK[i, j, :] = indK;
 
-		radiusMap = np.sqrt(indMapI**2 + indMapJ**2 + indMapK**2);
-
+		#radiusMap = np.sqrt(indMapI**2 + indMapJ**2 + indMapK**2);
+		radiusMap = np.sqrt(indMapI**2 + indMapJ**2);
 		#transform the indices to spherical coordinates
 		hxy = np.hypot(indMapI, indMapJ)
 		azimuth = np.arctan2(indMapJ, indMapI) * 180.0/np.pi;
-		polar = np.arctan2(indMapK, hxy) * 180.0/np.pi;
+		polar = np.arctan2(indMapK, radiusMap) * 180.0/np.pi;
 
 	elif map.ndim == 2:
 		# calc frequency for each voxel
@@ -120,9 +121,8 @@ def makeIndexVolumes(map):
 		radiusMap = np.sqrt(indMapI**2 + indMapJ**2);
 
 		#transform the indices to polar coordinates
-		azimuth = np.arctan2(indMapJ, indMapI)
+		azimuth = np.arctan2(indMapJ, indMapI)*180.0/np.pi;
 		polar = None;
-
 
 	return azimuth, polar;
 
@@ -371,7 +371,6 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 #--------------------------------------------------------
 def threeDimensionalFSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verbose, permutedCorCoeffs, SMLM):
 
-
 	#***********************************************
 	#***** function that calculates the 3D FSC *****
 	#***********************************************
@@ -414,18 +413,17 @@ def threeDimensionalFSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits
 	directionalResolutions = [];
 	phiArray = [];
 	thetaArray = [];
-	samplingAngles = 10;
-	angleSpacing = 10;
+	samplingAngles = 5;
+	angleSpacing = 20;
 	directionalResolutionHeatmap = np.zeros((samplingAngles, samplingAngles));
 
 	phiIndex = 0;
-	thetaIndex = 0;
 
 	#phi is azimuth (-pi, pi), theta is polar angle (0,pi), 100 sampling points each
-	for phi in np.linspace(-np.pi, np.pi, samplingAngles):
+	for phi in np.linspace(-160, 160, samplingAngles):
 
 		thetaIndex = 0;
-		for theta in np.linspace(0, np.pi, samplingAngles):
+		for theta in np.linspace(20, 70, samplingAngles):
 
 			for i in range(res.shape[0]):
 
@@ -433,12 +431,16 @@ def threeDimensionalFSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits
 				resShell_half1 = fft_half1[((tmpRes - resSpacing) < freqMap) & (freqMap < (tmpRes + resSpacing)) & (azimuthAngleMap > (phi-angleSpacing)) & (azimuthAngleMap < (phi+angleSpacing)) & (polarAngleMap > (theta-angleSpacing)) & (polarAngleMap < (theta+angleSpacing))];
 				resShell_half2 = fft_half2[((tmpRes - resSpacing) < freqMap) & (freqMap < (tmpRes + resSpacing)) & (azimuthAngleMap > (phi-angleSpacing)) & (azimuthAngleMap < (phi+angleSpacing)) & (polarAngleMap > (theta-angleSpacing)) & (polarAngleMap < (theta+angleSpacing))];
 
+
 				FSC[i] = correlationCoefficient(resShell_half1, resShell_half2);
 
 				if (permutedCorCoeffs is not None):  # for local resolution estimation
 					tmpCorCoeffs = permutedCorCoeffs[i];
 					pVals[i] = (tmpCorCoeffs[tmpCorCoeffs > FSC[i]].shape[0]) / (float(tmpCorCoeffs.shape[0]));
 					tmpPermutedCorCoeffs = None;
+				elif resShell_half1.size == 0:
+					pVals[i] = 0.0;
+
 				else:
 					pVals[i], _, _, _, _ = permutationTest(
 						resShell_half1, resShell_half2, numAsymUnits, maskCoeff);
@@ -500,6 +502,20 @@ def threeDimensionalFSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits
 		if phiIndex % (int(math.ceil(samplingAngles / 20.0))) == 0:
 			output = "%.1f" % (progress * 100) + "% finished ...";
 			print(output);
+
+	# *************************************
+	# ********** do interpolation *********
+	# *************************************
+
+	print("Interpolating directional Resolutions ...");
+	x = np.linspace(1, 10, samplingAngles);
+	y = np.linspace(1, 10, samplingAngles);
+	myInterpolatingFunction = RegularGridInterpolator((x, y), directionalResolutionHeatmap, method='linear')
+	xNew = np.linspace(1, 10, 50);
+	yNew = np.linspace(1, 10, 50);
+	xInd, yInd = np.meshgrid(xNew, yNew, indexing='ij', sparse=True);
+	directionalResolutionHeatmap = myInterpolatingFunction((xInd, yInd));
+
 
 	return phiArray, thetaArray, directionalResolutions, directionalResolutionHeatmap;
 
@@ -678,7 +694,7 @@ def writeFSC(resolutions, FSC, qValuesFDR, pValues, resolution):
 	plt.ylabel("FSC");
 	plt.legend();
 
-	plt.savefig('FSC.png', dpi=400);
+	plt.savefig('FSC.pdf', dpi=400);
 	plt.close();
 
 	#save txt file

@@ -235,10 +235,14 @@ class threeeDWindow(QWidget):
 																				 numAsymUnits, False, False, None,
 																				 False);
 
-		# plot the local resolutions
-		plt.imshow(directionalResolutionHeatmap, cmap='hot', origin='lower');
-		plt.colorbar();
-		plt.savefig('directionalResolutions.png');
+		#plot the directional resolutions
+		plt.title("Directional resolution plot")
+		plt.imshow(directionalResolutionHeatmap.T, cmap='hot', origin='lower', extent=[-180, 180, 0, 90]);
+		cbar  = plt.colorbar(orientation="horizontal");
+		cbar.set_label("Resolution [Angstroem]")
+		plt.ylabel("Polar angle");
+		plt.xlabel("Azimuth");
+		plt.savefig('directionalResolutions.pdf', dpi=400);
 		plt.close();
 
 		end = time.time();
