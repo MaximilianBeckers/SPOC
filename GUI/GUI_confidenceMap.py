@@ -217,6 +217,7 @@ class ConfMapWindow(QWidget):
 		#generate the diagnostic image
 		pp = mapUtil.makeDiagnosticPlot(mapData, windowSize, False, boxCoord);
 		pp.savefig('diag_image.png');
+		pp.close();
 
 		#now show the diagnostic image in new window
 		dialog = NoiseWindow(self)

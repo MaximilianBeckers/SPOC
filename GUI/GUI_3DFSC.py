@@ -43,9 +43,9 @@ class threeeDWindow(QWidget):
 		hbox_half2.addWidget(searchButton_halfMap2);
 		layout.addRow('Half Map 2', hbox_half2);
 
-		self.symmetry = QLineEdit();
-		self.symmetry.setText('C1');
-		layout.addRow('Symmetry', self.symmetry);
+		#self.symmetry = QLineEdit();
+		#self.symmetry.setText('C1');
+		#layout.addRow('Symmetry', self.symmetry);
 
 
 		# ------------ now optional input
@@ -58,9 +58,9 @@ class threeeDWindow(QWidget):
 		self.apix.setText('None');
 		layout.addRow('Pixel size [A]', self.apix);
 
-		self.numAsUnit = QLineEdit();
-		self.numAsUnit.setText('None');
-		layout.addRow('# asym. units', self.numAsUnit);
+		#self.numAsUnit = QLineEdit();
+		#self.numAsUnit.setText('None');
+		#layout.addRow('# asym. units', self.numAsUnit);
 
 
 		# add output directory
@@ -71,6 +71,10 @@ class threeeDWindow(QWidget):
 		hbox_output.addWidget(searchButton_output);
 		layout.addRow('Save output to ', hbox_output);
 
+		layout.addRow(' ', QHBoxLayout());  # make some space
+		layout.addRow(' ', QHBoxLayout());  # make some space
+		layout.addRow(' ', QHBoxLayout());  # make some space
+		layout.addRow(' ', QHBoxLayout());  # make some space
 		layout.addRow(' ', QHBoxLayout());  # make some space
 		layout.addRow(' ', QHBoxLayout());  # make some space
 		layout.addRow(' ', QHBoxLayout());  # make some space
@@ -184,15 +188,13 @@ class threeeDWindow(QWidget):
 			path = os.path.dirname(self.fileLine_halfMap1.text());
 		os.chdir(path);
 		splitFilename = os.path.splitext(os.path.basename(self.fileLine_halfMap1.text()));
-		outputFilename_PostProcessed =  splitFilename[0] + "_postProcessed.mrc";
-
+		outputFilename_dirRes = splitFilename[0] + "_directionalResolutions.mrc";
 
 		# make the mask
 		print("Using a circular mask ...");
 		maskData = FSCutil.makeCircularMask(halfMap1Data, (np.min(halfMap1Data.shape) / 2.0) - 4.0);  # circular mask
 		maskBFactor = FSCutil.makeCircularMask(halfMap1Data, (
 					np.min(halfMap1Data.shape) / 4.0) - 4.0);  # smaller circular mask for B-factor estimation
-
 
 		#**************************************
 		#********* get pixel size *************
@@ -212,7 +214,7 @@ class threeeDWindow(QWidget):
 					apixMap));
 			apix = apixMap;
 
-		#******************************************
+		""""#******************************************
 		#*********** get num Asym Units ***********
 		#******************************************
 
@@ -227,10 +229,10 @@ class threeeDWindow(QWidget):
 			symmetry = self.symmetry.text();
 			numAsymUnits = FSCutil.getNumAsymUnits(symmetry);
 			print('Using provided ' + symmetry + ' symmetry. Number of asymmetric units: {:d}'.format(numAsymUnits));
-
-
+		"""
+		numAsymUnits = 1.0;
 		#run the FSC
-		phiArray, thetaArray, directionalResolutions, directionalResolutionHeatmap = FSCutil.threeDimensionalFSC(halfMap1Data, halfMap2Data,
+		phiArray, thetaArray, directionalResolutions, directionalResolutionHeatmap, dirResMap3D = FSCutil.threeDimensionalFSC(halfMap1Data, halfMap2Data,
 																				 maskData, apix, 0.143,
 																				 numAsymUnits, False, False, None,
 																				 False);
@@ -240,10 +242,22 @@ class threeeDWindow(QWidget):
 		plt.imshow(directionalResolutionHeatmap.T, cmap='hot', origin='lower', extent=[-180, 180, 0, 90]);
 		cbar  = plt.colorbar(orientation="horizontal");
 		cbar.set_label("Resolution [Angstroem]")
-		plt.ylabel("Polar angle");
-		plt.xlabel("Azimuth");
+		plt.ylabel("Elevation [˚]");
+		plt.xlabel("Azimuth [˚]");
 		plt.savefig('directionalResolutions.pdf', dpi=400);
 		plt.close();
+
+		# write the directional resolution map
+		dirResMapMRC = mrcfile.new(outputFilename_dirRes, overwrite=True);
+		dirResMap3D = np.float32(dirResMap3D);
+		dirResMapMRC.set_data(dirResMap3D);
+		dirResMapMRC.voxel_size = apix;
+		dirResMapMRC.close();
+
+		output = "Saved local resolutions map to: " + outputFilename_dirRes;
+		print(output);
+
+
 
 		end = time.time();
 		totalRuntime = end - start;

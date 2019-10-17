@@ -8,13 +8,13 @@ import numpy as np
 import time, os
 
 # ********************************
-# ******* resolution window ******
-# *********************************
+# ******* sharpening window ******
+# ********************************
 
-class ResolutionWindow(QWidget):
+class SharpeningWindow(QWidget):
 
 	def __init__(self):
-		super(ResolutionWindow, self).__init__();
+		super(SharpeningWindow, self).__init__();
 
 		layout = QFormLayout();
 
@@ -40,10 +40,10 @@ class ResolutionWindow(QWidget):
 		hbox_half2.addWidget(searchButton_halfMap2);
 		layout.addRow('Half Map 2', hbox_half2);
 
-		self.symmetry = QLineEdit();
-		self.symmetry.setText('C1');
-		layout.addRow('Symmetry', self.symmetry);
 
+		self.resolution = QLineEdit();
+		self.resolution.setText('2');
+		layout.addRow('Resolution [A]', self.resolution);
 
 		# ------------ now optional input
 		layout.addRow(' ', QHBoxLayout()); # make some space
@@ -55,10 +55,9 @@ class ResolutionWindow(QWidget):
 		self.apix.setText('None');
 		layout.addRow('Pixel size [A]', self.apix);
 
-		self.numAsUnit = QLineEdit();
-		self.numAsUnit.setText('None');
-		layout.addRow('# asym. units', self.numAsUnit);
-
+		self.bFactor = QLineEdit();
+		self.bFactor.setText('None');
+		layout.addRow('B-factor', self.bFactor);
 
 		# add output directory
 		hbox_output = QHBoxLayout();
@@ -85,7 +84,7 @@ class ResolutionWindow(QWidget):
 		formGroupBox.setLayout(layout);
 
 		#set the main Layout
-		heading = QLabel("Global resolution estimation by FDR-FSC", self);
+		heading = QLabel("Global sharpening", self);
 		heading.setFont(QFont('Arial', 17));
 		heading.setAlignment(Qt.AlignTop);
 
@@ -142,11 +141,11 @@ class ResolutionWindow(QWidget):
 		return btn;
 
 
-	def showMessageBox(self, resolution):
+	def showMessageBox(self, resolution, bFactor):
 
 		msg = QMessageBox();
 		msg.setIcon(QMessageBox.Information);
-		msg.setText("Resolution at 1% FDR-FSC: {:.2f}.".format(resolution));
+		msg.setText("Map filtered at a resolution of: {:.2f} A. \n \nEstimated B-factor: {:.2f}".format(resolution, bFactor));
 		msg.setWindowTitle("Results");
 		msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel);
 		retval = msg.exec_();
@@ -157,7 +156,7 @@ class ResolutionWindow(QWidget):
 		start = time.time();
 
 		print('***************************************************');
-		print('******* Significance analysis of FSC curves *******');
+		print('**********  Sharpening of cryo-EM maps  ***********');
 		print('***************************************************');
 
 		#read the half maps
@@ -210,37 +209,48 @@ class ResolutionWindow(QWidget):
 					apixMap));
 			apix = apixMap;
 
-		#******************************************
-		#*********** get num Asym Units ***********
-		#******************************************
-
+		#**********************************************
+		#***************** get bfactor ****************
+		#**********************************************
 		try:
-			numAsymUnits = int(self.numAsUnit.text());
+			bFactorInput = float(self.bFactor.text());
 		except:
-			numAsymUnits = None;
+			bFactorInput = None;
 
-		if numAsymUnits is not None:
-			print('Using user provided number of asymmetric units, given as {:d}'.format(numAsymUnits));
+		#**********************************************
+		#***************** get bfactor ****************
+		#**********************************************
+		try:
+			resolution = float(self.resolution.text());
+		except:
+			msg = QMessageBox();
+			msg.setIcon(QMessageBox.Information);
+			msg.setText("No resolution specified ...");
+			msg.setWindowTitle("Error");
+			msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel);
+			retval = msg.exec_();
+			return;
+
+
+		if (resolution > 8.0) and (bFactorInput is None):
+			msg = QMessageBox();
+			msg.setIcon(QMessageBox.Information);
+			msg.setText("Automated B-factor estimation is unstable for low-resolution maps. Please specify a B-factor!");
+			msg.setWindowTitle("Error");
+			msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel);
+			retval = msg.exec_();
+			return;
+
+
+		if bFactorInput is not None:
+			bFactor = bFactorInput;
+			print('Using a user-specified B-factor of {:.2f} for map sharpening'.format(-bFactor));
 		else:
-			symmetry = self.symmetry.text();
-			numAsymUnits = FSCutil.getNumAsymUnits(symmetry);
-			print('Using provided ' + symmetry + ' symmetry. Number of asymmetric units: {:d}'.format(numAsymUnits));
+			# estimate b-factor and sharpen the map
+			bFactor = FSCutil.estimateBfactor(0.5 * (halfMap1Data + halfMap2Data), resolution, apix, maskBFactor);
+			print('Using a B-factor of {:.2f} for map sharpening.'.format(-bFactor));
 
-		#**********************************************
-		#*************** get resolutions **************
-		#**********************************************
-
-		#run the FSC
-		res, FSC, percentCutoffs, pValues, qValsFDR, resolution, _ = FSCutil.FSC(halfMap1Data, halfMap2Data,
-																				 maskData, apix, 0.143,
-																				 numAsymUnits, False, True, None,
-																				 False);
-
-		# write the FSC
-		FSCutil.writeFSC(res, FSC, qValsFDR, pValues, resolution);
-
-
-		processedMap = FDRutil.sharpenMap(0.5 * (halfMap1Data + halfMap2Data), 0, apix, resolution);
+		processedMap = FDRutil.sharpenMap(0.5 * (halfMap1Data + halfMap2Data), -bFactor, apix, resolution);
 
 		# write the post-processed map
 		postProcMRC = mrcfile.new(outputFilename_PostProcessed, overwrite=True);
@@ -249,7 +259,7 @@ class ResolutionWindow(QWidget):
 		postProcMRC.voxel_size = apix;
 		postProcMRC.close();
 
-		output = "Saved filtered map to: " + outputFilename_PostProcessed;
+		output = "Saved sharpened and filtered map to: " + outputFilename_PostProcessed;
 		print(output);
 
 		end = time.time();
@@ -258,5 +268,5 @@ class ResolutionWindow(QWidget):
 		print("****** Summary ******");
 		print("Runtime: %.2f" % totalRuntime);
 
-		self.showMessageBox(resolution);
+		self.showMessageBox(resolution, bFactor);
 

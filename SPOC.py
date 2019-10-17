@@ -2,7 +2,7 @@ import sys, os
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-from GUI import GUI_localFiltering, GUI_resolutions, GUI_confidenceMap, GUI_localResolution, GUI_SMLM, GUI_SMLM_localResolution, GUI_3DFSC
+from GUI import GUI_localFiltering, GUI_resolutions, GUI_sharpening, GUI_confidenceMap, GUI_localResolution, GUI_SMLM, GUI_SMLM_localResolution, GUI_3DFSC
 
 
 class Window(QWidget):
@@ -52,8 +52,9 @@ class Window(QWidget):
 		self.leftlistEM.insertItem(0, 'Global resolution estimation by FDR-FSC');
 		self.leftlistEM.insertItem(1, 'Local resolution estimation by FDR-FSC');
 		self.leftlistEM.insertItem(2, '3D FSC - Directional resolutions by FDR-FSC');
-		self.leftlistEM.insertItem(3, 'Local resolution filtering');
-		self.leftlistEM.insertItem(4, 'Confidence maps');
+		self.leftlistEM.insertItem(3, 'Sharpening');
+		self.leftlistEM.insertItem(4, 'Local resolution filtering');
+		self.leftlistEM.insertItem(5, 'Confidence maps');
 
 		self.LMlabel = QLabel("Single Molecule Localization Microscopy", self);
 		self.LMlabel.setFont(QFont('Arial', 17));
@@ -72,10 +73,11 @@ class Window(QWidget):
 		self.stack1 = GUI_resolutions.ResolutionWindow();
 		self.stack2 = GUI_localResolution.ResolutionWindow();
 		self.stack3 = GUI_3DFSC.threeeDWindow();
-		self.stack4 = GUI_localFiltering.LocalFilteringWindow();
-		self.stack5 = GUI_confidenceMap.ConfMapWindow();
-		self.stack6 = GUI_SMLM.SMLMResolutionWindow();
-		self.stack7 = GUI_SMLM_localResolution.SMLMLocalResolutionWindow();
+		self.stack4 = GUI_sharpening.SharpeningWindow();
+		self.stack5 = GUI_localFiltering.LocalFilteringWindow();
+		self.stack6 = GUI_confidenceMap.ConfMapWindow();
+		self.stack7 = GUI_SMLM.SMLMResolutionWindow();
+		self.stack8 = GUI_SMLM_localResolution.SMLMLocalResolutionWindow();
 
 
 		self.Stack = QStackedWidget(self);
@@ -86,6 +88,7 @@ class Window(QWidget):
 		self.Stack.addWidget(self.stack5);
 		self.Stack.addWidget(self.stack6);
 		self.Stack.addWidget(self.stack7);
+		self.Stack.addWidget(self.stack8);
 
 		self.mainLayout = QHBoxLayout();
 		self.mainLayout.addLayout(self.leftLayout);
@@ -134,7 +137,7 @@ class Window(QWidget):
 	def displayLM(self):
 
 		i = self.leftlistLM.currentRow();
-		self.Stack.setCurrentIndex(i+4);
+		self.Stack.setCurrentIndex(i+5);
 
 def main():
 
