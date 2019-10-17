@@ -139,9 +139,9 @@ def makeDirResVolumes(map, dirResMap):
 	#first calculate the indices for voxel in the fft
 	if map.ndim == 3:
 		# calc indices for each voxel
-		indI = np.fft.fftfreq(sizeMap[0], 1.0)*sizeMap[0];
-		indJ = np.fft.fftfreq(sizeMap[1], 1.0)*sizeMap[1];
-		indK = np.fft.rfftfreq(sizeMap[2], 1.0)*sizeMap[2];
+		indI = np.around(np.fft.fftfreq(sizeMap[0], 1.0)*sizeMap[0]);
+		indJ = np.around(np.fft.fftfreq(sizeMap[1], 1.0)*sizeMap[1]);
+		indK = np.around(np.fft.rfftfreq(sizeMap[2], 1.0)*sizeMap[2]);
 
 		sizeFFT = np.array([indI.size, indJ.size, indK.size]);
 		FFT = np.zeros(sizeFFT);
