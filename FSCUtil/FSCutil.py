@@ -75,7 +75,7 @@ def makeIndexVolumes(map):
 		# calc indices for each voxel
 		indI = np.fft.fftfreq(sizeMap[0], 1.0)*sizeMap[0];
 		indJ = np.fft.fftfreq(sizeMap[1], 1.0)*sizeMap[1];
-		indK = np.fft.rfftfreq(sizeMap[2], 1.0)*sizeMap[2];
+		indK = np.fft.fftfreq(sizeMap[2], 1.0)*sizeMap[2];
 
 		sizeFFT = np.array([indI.size, indJ.size, indK.size]);
 		FFT = np.zeros(sizeFFT);
@@ -95,12 +95,6 @@ def makeIndexVolumes(map):
 			for j in range(sizeFFT[1]):
 				indMapK[i, j, :] = indK;
 
-		#radiusMap = np.sqrt(indMapI**2 + indMapJ**2 + indMapK**2);
-		radiusMap = np.sqrt(indMapI**2 + indMapJ**2);
-		#transform the indices to spherical coordinates
-		hxy = np.hypot(indMapI, indMapJ)
-		azimuth = np.arctan2(indMapJ, indMapI) * 180.0/np.pi;
-		polar = np.arctan2(indMapK, radiusMap) * 180.0/np.pi;
 
 	elif map.ndim == 2:
 		# calc frequency for each voxel
@@ -118,13 +112,8 @@ def makeIndexVolumes(map):
 		for i in range(sizeFFT[0]):
 			indMapJ[i, :] = indJ;
 
-		radiusMap = np.sqrt(indMapI**2 + indMapJ**2);
 
-		#transform the indices to polar coordinates
-		azimuth = np.arctan2(indMapJ, indMapI)*180.0/np.pi;
-		polar = None;
-
-	return azimuth, polar;
+	return  indMapI, indMapJ, indMapK;
 
 #--------------------------------------------------------------
 def makeDirResVolumes(map, dirResMap):
@@ -162,9 +151,9 @@ def makeDirResVolumes(map, dirResMap):
 				indMapK[i, j, :] = indK;
 
 		radiusMap = np.sqrt(indMapI**2 + indMapJ**2);
+
 		azimuth = np.arctan2(indMapJ, indMapI) * 180.0/np.pi;
 		el = np.arctan2(indMapK, radiusMap) * 180.0/np.pi;
-
 
 	x = np.linspace(1, 10, dirResMap.shape[0]);
 	y = np.linspace(1, 10, dirResMap.shape[1]);
@@ -460,16 +449,48 @@ def threeDimensionalFSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits
 
 	sizeMap = halfMap1.shape;
 
-	#calculate spherical coordinates for each voxel in FFT
-	azimuthAngleMap, polarAngleMap = makeIndexVolumes(halfMap1);
 
-	# calculate frequency map
-	freqMap = calculate_frequency_map(halfMap1);
+
+	# calc frequency for each voxel
+	freqi = np.fft.fftfreq(sizeMap[0], 1.0);
+	freqj = np.fft.fftfreq(sizeMap[1], 1.0);
+	freqk = np.fft.fftfreq(sizeMap[2], 1.0);
+
+	sizeFFT = np.array([freqi.size, freqj.size, freqk.size]);
+	FFT = np.zeros(sizeFFT);
+
+	freqMapi = np.copy(FFT);
+	for j in range(sizeFFT[1]):
+		for k in range(sizeFFT[2]):
+			freqMapi[:, j, k] = freqi * freqi;
+
+	freqMapj = np.copy(FFT);
+	for i in range(sizeFFT[0]):
+		for k in range(sizeFFT[2]):
+			freqMapj[i, :, k] = freqj * freqj;
+
+	freqMapk = np.copy(FFT);
+	for i in range(sizeFFT[0]):
+		for j in range(sizeFFT[1]):
+			freqMapk[i, j, :] = freqk * freqk;
+
+	freqMap = np.sqrt(freqMapi + freqMapj + freqMapk);
 	freqMap = freqMap / float(apix);
 
+
+
+
+
+
+
+
+	#calculate spherical coordinates for each voxel in FFT
+	xInd, yInd, zInd = makeIndexVolumes(halfMap1);
+
+
 	# do fourier transforms
-	fftObject_half1 = pyfftw.builders.rfftn(halfMap1);
-	fftObject_half2 = pyfftw.builders.rfftn(halfMap2);
+	fftObject_half1 = pyfftw.builders.fftn(halfMap1);
+	fftObject_half2 = pyfftw.builders.fftn(halfMap2);
 	fft_half1 = fftObject_half1(halfMap1);
 	fft_half2 = fftObject_half2(halfMap2);
 
@@ -483,15 +504,18 @@ def threeDimensionalFSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits
 	FSC = np.ones((res.shape[0]));
 	pVals = np.zeros((res.shape[0]));
 	directionalResolutions = [];
-	permutedCorCoeffs = [];
+	permutedCorCoeffs = [[]];
 	phiArray = [];
 	thetaArray = [];
 	samplingAngles = 5;
-	angleSpacing = 20.0;
+	angleSpacing = 0.055*2*np.pi; #correspond to 20 degrees
 	directionalResolutionMap = np.zeros((samplingAngles, samplingAngles));
-	phiAngles = np.linspace(-160, 160, samplingAngles);
-	thetaAngles = np.linspace(20, 70, samplingAngles);
+	phiAngles = np.linspace(-np.pi, np.pi, samplingAngles );
 
+	thetaAngles = np.linspace(0, (np.pi/2.0), samplingAngles );
+
+
+	thetaAngles = thetaAngles[:samplingAngles];
 
 	#phi is azimuth (-pi, pi), theta is polar angle (0,pi), 100 sampling points each
 	for phiIndex in range(samplingAngles):
@@ -502,37 +526,49 @@ def threeDimensionalFSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits
 
 			theta = thetaAngles[thetaIndex];
 
+			#get point with the specified angles and radius 1
+			x = np.cos(theta)*np.cos(phi);
+			y = np.cos(theta)*np.sin(phi);
+			z = np.sin(theta);
+
+			#get angle to (x,y,z) for all points in the map
+			with np.errstate(divide='ignore', invalid='ignore'):
+				angles = np.arccos(np.divide(x*xInd + y*yInd + z*zInd, (np.sqrt(xInd**2 + yInd**2 + zInd**2)*np.sqrt(x**2+y**2+z**2))));
+				angles[~ np.isfinite(angles)] = 0;
+
 			for i in range(res.shape[0]):
 
 				tmpRes = res[i];
 
-				currentIndices = ((tmpRes - resSpacing) < freqMap) & (freqMap < (tmpRes + resSpacing)) & (
-							azimuthAngleMap > (phi - angleSpacing)) & (azimuthAngleMap < (phi + angleSpacing)) & (
-							polarAngleMap > (theta - angleSpacing)) & (polarAngleMap < (theta + angleSpacing));
+				currentIndices = (((tmpRes - resSpacing) < freqMap) & (freqMap < (tmpRes + resSpacing)) & (np.absolute(angles) < angleSpacing));
 
 				resShell_half1 = fft_half1[currentIndices];
 				resShell_half2 = fft_half2[currentIndices];
 
-				#FSC[i] = correlationCoefficient(resShell_half1, resShell_half2);
+				if (resShell_half1.size < 10) and (thetaIndex==0) and (phiIndex==0): #if no samples in this shell, accept it
 
-				if resShell_half1.size == 0: #if no samples in this shell, accept it
-					pVals[i] = 0.0;
 					permutedCorCoeffs.append([]);
+					pVals[i] = 0.0;
+					FSC[i] = 1.0;
+
 				else:
-					#if (phiIndex == 0) and (thetaIndex == 0):
+					FSC[i] = correlationCoefficient(resShell_half1, resShell_half2);
+
+					if (thetaIndex==0) and (phiIndex==0):
 						pVals[i], _, _, _, tmpPermutedCorCoeffs = permutationTest(resShell_half1, resShell_half2, numAsymUnits, maskCoeff);
-						permutedCorCoeffs.append(tmpPermutedCorCoeffs);
-					#elif permutedCorCoeffs[i] == []:
-					#	pVals[i], _, _, _, tmpPermutedCorCoeffs = permutationTest(resShell_half1, resShell_half2, numAsymUnits, maskCoeff);
-					#	permutedCorCoeffs.append(tmpPermutedCorCoeffs);
-					#else: #do not permute again
-					#	tmpCorCoeffs = permutedCorCoeffs[i];
-					#	pVals[i] = (tmpCorCoeffs[tmpCorCoeffs > FSC[i]].shape[0]) / (float(tmpCorCoeffs.shape[0]));
+						permutedCorCoeffs.append(np.copy(tmpPermutedCorCoeffs));
+					else:
+						tmpCorCoeffs = permutedCorCoeffs[i];
+						if tmpCorCoeffs == []:
+							pVals[i] = 0.0;
+						else:
+							pVals[i] = (tmpCorCoeffs[tmpCorCoeffs > FSC[i]].shape[0]) / (float(tmpCorCoeffs.shape[0]));
+
 
 			# do FDR control of p-Values
 			qVals_FDR = FDRutil.pAdjust(pVals, 'BY');
 
-			"""tmpFSC = np.copy(FSC);
+			tmpFSC = np.copy(FSC);
 			tmpFSC[tmpFSC > cutoff] = 1.0;
 			tmpFSC[tmpFSC <= cutoff] = 0.0;
 			tmpFSC = 1.0 - tmpFSC;
@@ -550,7 +586,7 @@ def threeDimensionalFSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits
 						tmpFreq = res[int(resolution)]  # + (res[resolution+1] - res[resolution])/2.0;
 						resolution = float(1.0 / tmpFreq);
 			except:
-				resolution = 2.0 * apix;"""
+				resolution = 2.0 * apix;
 
 			threshQVals = np.copy(qVals_FDR);
 			threshQVals[threshQVals <= 0.01] = 0.0;  # signal
@@ -586,7 +622,7 @@ def threeDimensionalFSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits
 	# *************************************
 	# ********** do interpolation *********
 	# *************************************
-
+	"""
 	#set landscape taking into account spherical coordinates
 	orLandscape = np.zeros((3*samplingAngles, 3*samplingAngles));
 
@@ -604,17 +640,17 @@ def threeDimensionalFSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits
 	orLandscape[int(samplingAngles/2): int(1.5 * samplingAngles), 2*samplingAngles:3*samplingAngles] = np.flip(directionalResolutionMap, axis=1);
 	orLandscape[int(1.5 * samplingAngles):int(2.5 * samplingAngles), 2*samplingAngles:3*samplingAngles] = np.flip(directionalResolutionMap, axis=1);
 	orLandscape[ int(2.5 * samplingAngles):, 2*samplingAngles:3*samplingAngles] = flippedDirResMap[:int(0.5*samplingAngles)+1, :];
-
+	"""
 	print("Interpolating directional Resolutions ...");
-	x = np.linspace(1, 10, samplingAngles*3);
-	y = np.linspace(1, 10, samplingAngles*3);
-	myInterpolatingFunction = RegularGridInterpolator((x, y), orLandscape, method='linear')
+	x = np.linspace(1, 10, samplingAngles);
+	y = np.linspace(1, 10, samplingAngles);
+	myInterpolatingFunction = RegularGridInterpolator((x, y), directionalResolutionMap, method='linear')
 	xNew = np.linspace(1, 10, 15*samplingAngles);
 	yNew = np.linspace(1, 10, 15*samplingAngles);
 	xInd, yInd = np.meshgrid(xNew, yNew, indexing='ij', sparse=True);
 	directionalResolutionMap = myInterpolatingFunction((xInd, yInd));
 
-	directionalResolutionMap = directionalResolutionMap[5*samplingAngles:10*samplingAngles, 5*samplingAngles:10*samplingAngles]
+	#directionalResolutionMap = directionalResolutionMap[5*samplingAngles:10*samplingAngles, 5*samplingAngles:10*samplingAngles]
 
 	dirResMap = makeDirResVolumes(halfMap1, directionalResolutionMap);
 
