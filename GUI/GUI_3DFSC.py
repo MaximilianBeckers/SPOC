@@ -58,10 +58,20 @@ class threeeDWindow(QWidget):
 		self.apix.setText('None');
 		layout.addRow('Pixel size [A]', self.apix);
 
-		#self.numAsUnit = QLineEdit();
-		#self.numAsUnit.setText('None');
-		#layout.addRow('# asym. units', self.numAsUnit);
+		#sampling of azimuth
+		self.samplingAzimuth = QLineEdit();
+		self.samplingAzimuth.setText('5');
+		layout.addRow('# sampling points for azimuth', self.samplingAzimuth);
 
+		#sampling of elevation
+		self.samplingElevation = QLineEdit();
+		self.samplingElevation.setText('5');
+		layout.addRow('# sampling points for elevation', self.samplingElevation);
+
+		#cone opening
+		self.coneOpening = QLineEdit();
+		self.coneOpening.setText('20');
+		layout.addRow('opening of directional cone [˚]', self.coneOpening);
 
 		# add output directory
 		hbox_output = QHBoxLayout();
@@ -71,10 +81,6 @@ class threeeDWindow(QWidget):
 		hbox_output.addWidget(searchButton_output);
 		layout.addRow('Save output to ', hbox_output);
 
-		layout.addRow(' ', QHBoxLayout());  # make some space
-		layout.addRow(' ', QHBoxLayout());  # make some space
-		layout.addRow(' ', QHBoxLayout());  # make some space
-		layout.addRow(' ', QHBoxLayout());  # make some space
 		layout.addRow(' ', QHBoxLayout());  # make some space
 		layout.addRow(' ', QHBoxLayout());  # make some space
 		layout.addRow(' ', QHBoxLayout());  # make some space
@@ -214,28 +220,57 @@ class threeeDWindow(QWidget):
 					apixMap));
 			apix = apixMap;
 
-		""""#******************************************
-		#*********** get num Asym Units ***********
-		#******************************************
+
+		#********************************************
+		#********* get sampling of azimuth **********
+		#********************************************
 
 		try:
-			numAsymUnits = int(self.numAsUnit.text());
+			samplingAzimuth = int(self.samplingAzimuth.text());
 		except:
-			numAsymUnits = None;
+			msg = QMessageBox();
+			msg.setIcon(QMessageBox.Information);
+			msg.setText("Cannot read sampling of azimuth angles ...");
+			msg.setWindowTitle("Error");
+			msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel);
+			retval = msg.exec_();
+			return;
 
-		if numAsymUnits is not None:
-			print('Using user provided number of asymmetric units, given as {:d}'.format(numAsymUnits));
-		else:
-			symmetry = self.symmetry.text();
-			numAsymUnits = FSCutil.getNumAsymUnits(symmetry);
-			print('Using provided ' + symmetry + ' symmetry. Number of asymmetric units: {:d}'.format(numAsymUnits));
-		"""
+		#**********************************************
+		#********* get sampling of elevation **********
+		#**********************************************
+
+		try:
+			samplingElevation = int(self.samplingElevation.text());
+		except:
+			msg = QMessageBox();
+			msg.setIcon(QMessageBox.Information);
+			msg.setText("Cannot read sampling of elevation angles ...");
+			msg.setWindowTitle("Error");
+			msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel);
+			retval = msg.exec_();
+			return;
+
+		#****************************************
+		#********* get opening of cone **********
+		#****************************************
+
+		try:
+			coneOpening = int(self.coneOpening.text());
+		except:
+			msg = QMessageBox();
+			msg.setIcon(QMessageBox.Information);
+			msg.setText("Cannot read sampling of cone opening angle ...");
+			msg.setWindowTitle("Error");
+			msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel);
+			retval = msg.exec_();
+			return;
+
 		numAsymUnits = 1.0;
 		#run the FSC
 		phiArray, thetaArray, directionalResolutions, directionalResolutionHeatmap, dirResMap3D = FSCutil.threeDimensionalFSC(halfMap1Data, halfMap2Data,
 																				 maskData, apix, 0.143,
-																				 numAsymUnits, False, False, None,
-																				 False);
+																				 numAsymUnits, samplingAzimuth, samplingElevation, coneOpening );
 
 		#plot the directional resolutions
 		plt.title("Directional resolution plot")

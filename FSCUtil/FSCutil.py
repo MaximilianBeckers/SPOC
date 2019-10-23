@@ -442,18 +442,13 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 
 
 #--------------------------------------------------------
-def threeDimensionalFSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verbose, permutedCorCoeffs, SMLM):
+def threeDimensionalFSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, samplingAzimuth, samplingElevation, coneOpening):
 
 	#***********************************************
 	#***** function that calculates the 3D FSC *****
 	#***********************************************
 
-	if localRes:
-		maskCoeff = 0.23;
-	elif SMLM:
-		maskCoeff = 0.6;
-	else:
-		maskCoeff = 0.7;
+	maskCoeff = 0.7;
 
 	if maskData is not None:
 		halfMap1 = halfMap1*maskData;
@@ -520,21 +515,22 @@ def threeDimensionalFSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits
 	phiArray = [];
 	thetaArray = [];
 	samplingAngles = 5;
-	angleSpacing = 0.055*2*np.pi; #correspond to 20 degrees
-	directionalResolutionMap = np.zeros((samplingAngles, samplingAngles));
-	phiAngles = np.linspace(-np.pi, np.pi, samplingAngles );
+	samplingAzimuth;
+	samplingElevation;
+	angleSpacing = (coneOpening/360.0)*2*np.pi; #correspond to 20 degrees
+	directionalResolutionMap = np.zeros((samplingAzimuth, samplingElevation));
 
-	thetaAngles = np.linspace(0, (np.pi/2.0), samplingAngles );
 
+	phiAngles = np.linspace(-np.pi, np.pi, samplingAzimuth );
+	thetaAngles = np.linspace(0, (np.pi/2.0), samplingElevation );
 
-	thetaAngles = thetaAngles[:samplingAngles];
 
 	#phi is azimuth (-pi, pi), theta is polar angle (0,pi), 100 sampling points each
-	for phiIndex in range(samplingAngles):
+	for phiIndex in range(samplingAzimuth):
 
 		phi = phiAngles[phiIndex];
 
-		for thetaIndex in range(samplingAngles):
+		for thetaIndex in range(samplingElevation):
 
 			theta = thetaAngles[thetaIndex];
 
@@ -626,47 +622,24 @@ def threeDimensionalFSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits
 
 
 		# print progress
-		progress = (phiIndex+1) / float(samplingAngles);
-		if phiIndex % (int(math.ceil(samplingAngles / 20.0))) == 0:
+		progress = (phiIndex+1) / float(samplingAzimuth);
+		if phiIndex % (int(math.ceil(samplingAzimuth / 20.0))) == 0:
 			output = "%.1f" % (progress * 100) + "% finished ...";
 			print(output);
 
 	# *************************************
 	# ********** do interpolation *********
 	# *************************************
-	"""
-	#set landscape taking into account spherical coordinates
-	orLandscape = np.zeros((3*samplingAngles, 3*samplingAngles));
-
-	flippedDirResMap = np.flip(directionalResolutionMap, axis=1);
-	orLandscape[ 0: int(0.5*samplingAngles), 0:samplingAngles] = flippedDirResMap[int(0.5*samplingAngles)+1:, :];
-	orLandscape[ int(samplingAngles/2): int(1.5*samplingAngles), 0:samplingAngles] = np.flip(directionalResolutionMap, axis=1);
-	orLandscape[ int(1.5*samplingAngles):int(2.5*samplingAngles), 0:samplingAngles] = np.flip(directionalResolutionMap, axis=1);
-	orLandscape[ int(2.5 * samplingAngles):, 0:samplingAngles] = flippedDirResMap[:int(0.5*samplingAngles)+1, :];
-
-	orLandscape[ 0:samplingAngles, samplingAngles:2*samplingAngles,] = directionalResolutionMap;
-	orLandscape[samplingAngles:2*samplingAngles, samplingAngles:2*samplingAngles] = directionalResolutionMap;
-	orLandscape[2*samplingAngles:3*samplingAngles, samplingAngles:2*samplingAngles] = directionalResolutionMap;
-
-	orLandscape[ 0: int(0.5*samplingAngles), 2*samplingAngles:3*samplingAngles] = flippedDirResMap[int(0.5*samplingAngles)+1:, :];
-	orLandscape[int(samplingAngles/2): int(1.5 * samplingAngles), 2*samplingAngles:3*samplingAngles] = np.flip(directionalResolutionMap, axis=1);
-	orLandscape[int(1.5 * samplingAngles):int(2.5 * samplingAngles), 2*samplingAngles:3*samplingAngles] = np.flip(directionalResolutionMap, axis=1);
-	orLandscape[ int(2.5 * samplingAngles):, 2*samplingAngles:3*samplingAngles] = flippedDirResMap[:int(0.5*samplingAngles)+1, :];
-	"""
 	print("Interpolating directional Resolutions ...");
-	x = np.linspace(1, 10, samplingAngles);
-	y = np.linspace(1, 10, samplingAngles);
+	x = np.linspace(1, 10, samplingAzimuth);
+	y = np.linspace(1, 10, samplingElevation);
 	myInterpolatingFunction = RegularGridInterpolator((x, y), directionalResolutionMap, method='linear')
-	xNew = np.linspace(1, 10, 15*samplingAngles);
-	yNew = np.linspace(1, 10, 15*samplingAngles);
+	xNew = np.linspace(1, 10, 15*samplingAzimuth);
+	yNew = np.linspace(1, 10, 15*samplingElevation);
 	xInd, yInd = np.meshgrid(xNew, yNew, indexing='ij', sparse=True);
 	directionalResolutionMap = myInterpolatingFunction((xInd, yInd));
 
-	#directionalResolutionMap = directionalResolutionMap[5*samplingAngles:10*samplingAngles, 5*samplingAngles:10*samplingAngles]
-
 	dirResMap = makeDirResVolumes(halfMap1, directionalResolutionMap);
-
-
 
 	return phiArray, thetaArray, directionalResolutions, directionalResolutionMap, dirResMap;
 
