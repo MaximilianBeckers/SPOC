@@ -161,9 +161,9 @@ class threeeDWindow(QWidget):
 
 		start = time.time();
 
-		print('***************************************************');
-		print('******* Significance analysis of FSC curves *******');
-		print('***************************************************');
+		print('************************************************************');
+		print('******* Significance analysis of FSC curves - 3D FSC *******');
+		print('************************************************************');
 
 		#read the half maps
 		try:

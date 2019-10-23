@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 import math
-import pyfftw
 
 
 #Author: Maximilian Beckers, EMBL Heidelberg, Sachse Group (2019)
@@ -45,10 +44,14 @@ def localFiltration(map, locResMap, apix, localVariance, windowSize, boxCoord, E
 	counter = 0;
 	numRes = len(locResArray);	
 
-	#do FFT of the respective map
-	fftObject = pyfftw.builders.rfftn(map);
-	mapFFT = fftObject();
+	try:
+		import pyfftw;
 
+		#do FFT of the respective map
+		fftObject = pyfftw.builders.rfftn(map);
+		mapFFT = fftObject();
+	except:
+		mapFFT = np.fft.rfftn(map);
 	#get frequency map
 	frequencyMap = FDRutil.calculate_frequency_map(map);
 

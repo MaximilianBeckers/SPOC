@@ -2,8 +2,6 @@ import numpy as np
 import math
 import os
 import sys
-import multiprocessing
-import pyfftw
 
 #Author: Maximilian Beckers, EMBL Heidelberg, Sachse Group (2019)
 
@@ -597,16 +595,22 @@ def lowPassFilter(mapFFT, frequencyMap, cutoff, shape):
 
 	sizeMap = mapFFT.shape;
 
-	#get number of cpus
-	numCores = multiprocessing.cpu_count();
-	
 	#do filtering of the map
 	filterMap = tanh_filter(frequencyMap, cutoff);
 	filteredftMap = filterMap*mapFFT;
 	
 	#do iverse FFT
-	fftObject = pyfftw.builders.irfftn(filteredftMap, shape, threads = numCores);
-	filteredMap = fftObject();
+	try:
+		import pyfftw
+		import multiprocessing
+
+		# get number of cpus
+		numCores = multiprocessing.cpu_count();
+
+		fftObject = pyfftw.builders.irfftn(filteredftMap, shape, threads = numCores);
+		filteredMap = fftObject();
+	except:
+		filteredMap = np.fft.irfftn(filteredftMap, shape);
 
 	filteredMap = np.real(filteredMap);
 
@@ -615,16 +619,25 @@ def lowPassFilter(mapFFT, frequencyMap, cutoff, shape):
 #---------------------------------------------------------------------------------
 def sharpenMap(map, Bfactor, apix, resolution):
 
-	#get number of cpus
-	numCores = multiprocessing.cpu_count();
+
 
 	frequencyMap = calculate_frequency_map(map);
 	frequencyMap = frequencyMap;
 	res_cutoff = apix/resolution;
 
 	#do Fourier transform of map
-	fftObject = pyfftw.builders.rfftn(map, threads = numCores);
-	mapFFT = fftObject();
+	try:
+		import pyfftw
+		import multiprocessing
+
+		# get number of cpus
+		numCores = multiprocessing.cpu_count();
+
+		fftObject = pyfftw.builders.rfftn(map, threads = numCores);
+		mapFFT = fftObject();
+	except:
+		mapFFT = np.fft.rfftn(map);
+
 
 	# do filtering of the map
 	tmpFreqMap = np.copy(frequencyMap);

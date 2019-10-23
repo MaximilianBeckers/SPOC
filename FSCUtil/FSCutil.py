@@ -4,8 +4,7 @@ from scipy.interpolate import RegularGridInterpolator
 import matplotlib.pyplot as plt
 import math
 import sys
-import pyfftw
-import multiprocessing
+
 
 #--------------------------------------------------------------
 def calculate_frequency_map(map):
@@ -243,9 +242,15 @@ def estimateBfactor(map, resolution, apix, maskData):
 	freqMap = freqMap/float(apix);
 
 	#do FFT
-	numCores = multiprocessing.cpu_count();
-	fftObject = pyfftw.builders.rfftn(maskData, threads=numCores);
-	FFTmap = fftObject(map*maskData);
+	try:
+		import pyfftw
+		import multiprocessing
+
+		numCores = multiprocessing.cpu_count();
+		fftObject = pyfftw.builders.rfftn(maskData, threads=numCores);
+		FFTmap = fftObject(map*maskData);
+	except:
+		FFTmap = np.fft.rfftn(map*maskData)
 
 	res = np.fft.rfftfreq(sizeMap[0], 1.0);
 	res = res / float(apix);
@@ -319,10 +324,17 @@ def FSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits, localRes, verb
 	freqMap = freqMap/float(apix);
 
 	#do fourier transforms
-	fftObject_half1 = pyfftw.builders.rfftn(halfMap1);
-	fftObject_half2 = pyfftw.builders.rfftn(halfMap2);
-	fft_half1 = fftObject_half1(halfMap1);
-	fft_half2 = fftObject_half2(halfMap2);
+	try:
+		import pyfftw
+		import multiprocessing
+
+		fftObject_half1 = pyfftw.builders.rfftn(halfMap1);
+		fftObject_half2 = pyfftw.builders.rfftn(halfMap2);
+		fft_half1 = fftObject_half1(halfMap1);
+		fft_half2 = fftObject_half2(halfMap2);
+	except:
+		fft_half1 = np.fft.rfftn(halfMap1);
+		fft_half2 = np.fft.rfftn(halfMap2);
 
 	sizeMap = halfMap1.shape;
 
@@ -477,22 +489,22 @@ def threeDimensionalFSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits
 	freqMap = np.sqrt(freqMapi + freqMapj + freqMapk);
 	freqMap = freqMap / float(apix);
 
-
-
-
-
-
-
-
 	#calculate spherical coordinates for each voxel in FFT
 	xInd, yInd, zInd = makeIndexVolumes(halfMap1);
 
 
 	# do fourier transforms
-	fftObject_half1 = pyfftw.builders.fftn(halfMap1);
-	fftObject_half2 = pyfftw.builders.fftn(halfMap2);
-	fft_half1 = fftObject_half1(halfMap1);
-	fft_half2 = fftObject_half2(halfMap2);
+	try:
+		import pyfftw
+		import multiprocessing
+
+		fftObject_half1 = pyfftw.builders.fftn(halfMap1);
+		fftObject_half2 = pyfftw.builders.fftn(halfMap2);
+		fft_half1 = fftObject_half1(halfMap1);
+		fft_half2 = fftObject_half2(halfMap2);
+	except:
+		fft_half1 = np.fft.fftn(halfMap1);
+		fft_half2 = np.fft.fftn(halfMap2);
 
 	res = np.fft.rfftfreq(sizeMap[0], 1.0);
 	res = res/float(apix);
