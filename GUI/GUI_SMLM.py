@@ -176,6 +176,18 @@ class SMLMResolutionWindow(QWidget):
 	# ---------------------------------------------
 	def runFSC(self):
 
+		#show message box before starting
+		msg = QMessageBox();
+		msg.setIcon(QMessageBox.Information);
+		msg.setText("Start the job with OK!")
+		msg.setInformativeText("GUI will be locked until the job is finished. See terminal printouts for progress ...");
+		msg.setWindowTitle("Start job");
+		msg.setStandardButtons( QMessageBox.Cancel| QMessageBox.Ok);
+		result = msg.exec_();
+
+		if result == QMessageBox.Cancel:
+			return;
+
 		start = time.time();
 
 		print('***************************************************');

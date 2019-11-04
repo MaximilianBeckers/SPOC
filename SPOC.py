@@ -137,7 +137,7 @@ class Window(QWidget):
 	def displayLM(self):
 
 		i = self.leftlistLM.currentRow();
-		self.Stack.setCurrentIndex(i+5);
+		self.Stack.setCurrentIndex(i+6);
 
 def main():
 

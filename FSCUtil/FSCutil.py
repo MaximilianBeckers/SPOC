@@ -514,16 +514,11 @@ def threeDimensionalFSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits
 	permutedCorCoeffs = [[]];
 	phiArray = [];
 	thetaArray = [];
-	samplingAngles = 5;
-	samplingAzimuth;
-	samplingElevation;
 	angleSpacing = (coneOpening/360.0)*2*np.pi; #correspond to 20 degrees
 	directionalResolutionMap = np.zeros((samplingAzimuth, samplingElevation));
 
-
-	phiAngles = np.linspace(-np.pi, np.pi, samplingAzimuth );
-	thetaAngles = np.linspace(0, (np.pi/2.0), samplingElevation );
-
+	phiAngles = np.linspace(-np.pi, np.pi, samplingAzimuth);
+	thetaAngles = np.linspace(0, (np.pi/2.0), samplingElevation);
 
 	#phi is azimuth (-pi, pi), theta is polar angle (0,pi), 100 sampling points each
 	for phiIndex in range(samplingAzimuth):

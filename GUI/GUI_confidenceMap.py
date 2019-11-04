@@ -168,6 +168,7 @@ class ConfMapWindow(QWidget):
 		msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel);
 		retval = msg.exec_();
 
+
 	#--------------------------------------------------------
 	def checkNoiseEstimationBtn(self):
 		btn = QPushButton('Check Noise Estim.');
@@ -226,11 +227,23 @@ class ConfMapWindow(QWidget):
 
 		#subprocess.call(["open", "diag_image.pdf"]);
 
-
 	#-----------------------------------------------------------
 	#------------------ run confidence map code ----------------
 	#-----------------------------------------------------------
 	def run(self):
+
+		#show message box before starting
+		msg = QMessageBox();
+		msg.setIcon(QMessageBox.Information);
+		msg.setText("Start the job with OK!")
+		msg.setInformativeText("GUI will be locked until the job is finished. See terminal printouts for progress ...");
+		msg.setWindowTitle("Start job");
+		msg.setStandardButtons( QMessageBox.Cancel| QMessageBox.Ok);
+		result = msg.exec_();
+
+		if result == QMessageBox.Cancel:
+			return;
+
 
 		start = time.time();
 
@@ -316,6 +329,7 @@ class ConfMapWindow(QWidget):
 			path = os.path.dirname(self.fileLine.text());
 		os.chdir(path);
 		splitFilename = os.path.splitext(os.path.basename(self.fileLine.text()));
+
 
 		#*******************************************
 		# ******** run the actual analysis *********

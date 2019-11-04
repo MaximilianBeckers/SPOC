@@ -146,13 +146,27 @@ class ResolutionWindow(QWidget):
 
 		msg = QMessageBox();
 		msg.setIcon(QMessageBox.Information);
-		msg.setText("Resolution at 1% FDR-FSC: {:.2f}.".format(resolution));
+		msg.setText("Resolution at 1% FDR-FSC: {:.2f} Angstroem.".format(resolution));
 		msg.setWindowTitle("Results");
 		msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel);
 		retval = msg.exec_();
 
 	# ---------------------------------------------
 	def runFSC(self):
+
+
+		#show message box before starting
+		msg = QMessageBox();
+		msg.setIcon(QMessageBox.Information);
+		msg.setText("Start the job with OK!")
+		msg.setInformativeText("GUI will be locked until the job is finished. See terminal printouts for progress ...");
+		msg.setWindowTitle("Start job");
+		msg.setStandardButtons( QMessageBox.Cancel| QMessageBox.Ok);
+		result = msg.exec_();
+
+		if result == QMessageBox.Cancel:
+			return;
+
 
 		start = time.time();
 
@@ -183,7 +197,7 @@ class ResolutionWindow(QWidget):
 			path = os.path.dirname(self.fileLine_halfMap1.text());
 		os.chdir(path);
 		splitFilename = os.path.splitext(os.path.basename(self.fileLine_halfMap1.text()));
-		outputFilename_PostProcessed =  splitFilename[0] + "_postProcessed.mrc";
+		outputFilename_PostProcessed =  splitFilename[0] + "_filtered.mrc";
 
 
 		# make the mask
