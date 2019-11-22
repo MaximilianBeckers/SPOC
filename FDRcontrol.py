@@ -201,7 +201,7 @@ def main():
 
 
 	# write the confidence Maps
-	confidenceMapMRC = mrcfile.new(splitFilename[0] + '_confidenceMap_-log10Scale.mrc', overwrite=True);
+	confidenceMapMRC = mrcfile.new(splitFilename[0] + '_confidenceMap_-log10FDR.mrc', overwrite=True);
 	confidenceMap = np.float32(1.0 - confidenceMap);
 	confidenceMap[confidenceMap == 0] = 0.0000000001;
 	confidenceMapMRC.set_data(-np.log10(confidenceMap));
