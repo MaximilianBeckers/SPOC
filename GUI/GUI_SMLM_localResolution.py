@@ -273,7 +273,6 @@ class SMLMLocalResolutionWindow(QWidget):
 		else:
 			print('No low resolution limit used ... ');
 
-
 		#calcualte the actual local resolutions
 		SMLMObject = SMLM.SMLM();
 		SMLMObject.localResolution(localizations, image1, image2, apix, stepSize, windowSize, lowResLimit);

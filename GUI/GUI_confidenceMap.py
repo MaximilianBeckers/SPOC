@@ -357,6 +357,15 @@ class ConfMapWindow(QWidget):
 		confidenceMapMRC.voxel_size = apix;
 		confidenceMapMRC.close();
 
+		# write the confidence Maps
+		confidenceMapMRC = mrcfile.new(splitFilename[0] + '_confidenceMap_-log10Scale.mrc', overwrite=True);
+		confidenceMap = np.float32(1.0 -confidenceMap);
+		confidenceMap[confidenceMap==0] = 0.0000000001;
+		confidenceMapMRC.set_data(-np.log10(confidenceMap));
+		confidenceMapMRC.voxel_size = apix;
+		confidenceMapMRC.close();
+
+
 		end = time.time();
 		totalRuntime = end - start;
 
