@@ -110,7 +110,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 										 permutedCorCoeffs=permutedCorCoeffs);
 
 	#parallelized local resolutions
-	numCores = multiprocessing.cpu_count();
+	numCores = min(multiprocessing.cpu_count(),4);
 	print("Using {:d} cores. This might take 5 minutes ...".format(numCores));
 	iIterable = range(boxSize, boxSize + sizeMap[0], stepSize);
 
