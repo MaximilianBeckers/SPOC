@@ -244,6 +244,10 @@ class ResolutionWindow(QWidget):
 		#*************** get resolutions **************
 		#**********************************************
 
+		#read the mask
+		#mask = mrcfile.open('/Users/mbeckers/Documents/LabBook/2019/June2019/mapModel_FSC/betaGal_refinement/mask.mrc', mode='r');
+		#maskData = mask.data;
+
 		#run the FSC
 		res, FSC, percentCutoffs, pValues, qValsFDR, resolution, _ = FSCutil.FSC(halfMap1Data, halfMap2Data,
 																				 maskData, apix, 0.143,
@@ -252,7 +256,6 @@ class ResolutionWindow(QWidget):
 
 		# write the FSC
 		FSCutil.writeFSC(res, FSC, qValsFDR, pValues, resolution);
-
 
 		processedMap = FDRutil.sharpenMap(0.5 * (halfMap1Data + halfMap2Data), 0, apix, resolution);
 

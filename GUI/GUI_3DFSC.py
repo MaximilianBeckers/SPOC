@@ -279,6 +279,10 @@ class threeeDWindow(QWidget):
 			retval = msg.exec_();
 			return;
 
+		#read the mask
+		#mask = mrcfile.open('/Users/mbeckers/Downloads/EMD-3061/other/mask.mrc', mode='r');
+		#maskData = mask.data;
+
 		numAsymUnits = 1.0;
 		#run the FSC
 		phiArray, thetaArray, directionalResolutions, directionalResolutionHeatmap, dirResMap3D = FSCutil.threeDimensionalFSC(halfMap1Data, halfMap2Data,
@@ -287,7 +291,7 @@ class threeeDWindow(QWidget):
 
 		#plot the directional resolutions
 		plt.title("Directional resolution plot")
-		plt.imshow(directionalResolutionHeatmap.T, cmap='hot', origin='lower', extent=[-180, 180, 0, 90]);
+		plt.imshow(directionalResolutionHeatmap.T, cmap='hot', origin='lower', extent=[-180, 180, 0, 90], vmin=3.4, vmax=4.2);
 		cbar  = plt.colorbar(orientation="horizontal");
 		cbar.set_label("Resolution [Angstroem]")
 		plt.ylabel("Elevation [˚]");
