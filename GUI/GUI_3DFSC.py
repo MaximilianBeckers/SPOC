@@ -293,7 +293,7 @@ class threeeDWindow(QWidget):
 		plt.title("Directional resolution plot")
 		plt.imshow(directionalResolutionHeatmap.T, cmap='hot', origin='lower', extent=[-180, 180, 0, 90], vmin=3.4, vmax=4.2);
 		cbar  = plt.colorbar(orientation="horizontal");
-		cbar.set_label("Resolution [Angstroem]")
+		cbar.set_label("Resolution [Angstroem]");
 		plt.ylabel("Elevation [˚]");
 		plt.xlabel("Azimuth [˚]");
 		plt.savefig('directionalResolutions.pdf', dpi=400);

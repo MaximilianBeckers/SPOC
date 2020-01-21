@@ -196,7 +196,8 @@ class SharpeningWindow(QWidget):
 		os.chdir(path);
 		splitFilename = os.path.splitext(os.path.basename(self.fileLine_halfMap1.text()));
 		outputFilename_PostProcessed =  splitFilename[0] + "_postProcessed.mrc";
-
+		outputFilename_PostProcessed_half1 = splitFilename[0] + "_postProcessed_half1.mrc";
+		outputFilename_PostProcessed_half2 = splitFilename[0] + "_postProcessed_half2.mrc";
 
 		# make the mask
 		maskData = FSCutil.makeCircularMask(halfMap1Data, (np.min(halfMap1Data.shape) / 2.0) - 4.0);  # circular mask
@@ -263,11 +264,32 @@ class SharpeningWindow(QWidget):
 			bFactor = FSCutil.estimateBfactor(0.5 * (halfMap1Data + halfMap2Data), resolution, apix, maskBFactor);
 			print('Using a B-factor of {:.2f} for map sharpening.'.format(-bFactor));
 
+			bFactor_half1 = FSCutil.estimateBfactor(halfMap1Data, resolution, apix, maskBFactor);
+			bFactor_half2 = FSCutil.estimateBfactor(halfMap2Data, resolution, apix, maskBFactor);
+
+			#print("B-factor of halfmap 1: {:.2f}".format(bFactor_half1));
+			#print("B-factor of halfmap 2: {:.2f}".format(bFactor_half2));
+
 		processedMap = FDRutil.sharpenMap(0.5 * (halfMap1Data + halfMap2Data), -bFactor, apix, resolution);
+		processed_halfMap1 = FDRutil.sharpenMap(halfMap1Data, -bFactor_half1, apix, resolution);
+		processed_halfMap2 = FDRutil.sharpenMap(halfMap2Data, -bFactor_half2, apix, resolution);
 
 		# write the post-processed map
 		postProcMRC = mrcfile.new(outputFilename_PostProcessed, overwrite=True);
 		postProc = np.float32(processedMap);
+		postProcMRC.set_data(postProc);
+		postProcMRC.voxel_size = apix;
+		postProcMRC.close();
+
+		# write the post-processed halfmaps
+		postProcMRC = mrcfile.new(outputFilename_PostProcessed_half1, overwrite=True);
+		postProc = np.float32(processed_halfMap1);
+		postProcMRC.set_data(postProc);
+		postProcMRC.voxel_size = apix;
+		postProcMRC.close();
+
+		postProcMRC = mrcfile.new(outputFilename_PostProcessed_half2, overwrite=True);
+		postProc = np.float32(processed_halfMap2);
 		postProcMRC.set_data(postProc);
 		postProcMRC.voxel_size = apix;
 		postProcMRC.close();

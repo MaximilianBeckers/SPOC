@@ -2,6 +2,7 @@ import numpy as np
 import math
 import os
 import sys
+from scipy.interpolate import RegularGridInterpolator
 
 #Author: Maximilian Beckers, EMBL Heidelberg, Sachse Group (2019)
 
@@ -92,6 +93,47 @@ def makeHannWindow(map):
 
 	return windowMap;
 
+#---------------------------------------------------------------------------------
+def makeCircularMask(map, sphereRadius):
+
+	#***********************************************************
+	#************** calculate spherical mask-map ***************
+	#*** with sizei of the given map and radius sphereRadius ***
+	#***********************************************************
+
+	#some initialization
+	mapSize = map.shape;
+
+	if map.ndim == 3:
+		x = np.linspace(-math.floor(mapSize[0]/2.0), -math.floor(mapSize[0]/2.0) + mapSize[0], mapSize[0]);
+		y = np.linspace(-math.floor(mapSize[1]/2.0), -math.floor(mapSize[1]/2.0) + mapSize[1], mapSize[1]);
+		z = np.linspace(-math.floor(mapSize[2]/2.0), -math.floor(mapSize[2]/2.0) + mapSize[2], mapSize[2]);
+
+		xx, yy, zz = np.meshgrid(x, y, z, indexing='ij');
+
+		radiusMap = np.sqrt(xx**2 + yy**2 + zz**2);
+
+	elif map.ndim == 2:
+		x = np.linspace(-math.floor(mapSize[0]/2.0), -math.floor(mapSize[0]/2.0) + mapSize[0], mapSize[0]);
+		y = np.linspace(-math.floor(mapSize[1]/2.0), -math.floor(mapSize[1]/2.0) + mapSize[1], mapSize[1]);
+
+		xx, yy = np.meshgrid(x, y, indexing='ij');
+
+		radiusMap = np.sqrt(xx**2 + yy**2);
+
+
+	#now extend mask with some smooth fall off
+	gaussFallOffSigma = 2;
+
+	tmpRadiusMap = radiusMap-sphereRadius;
+	fallOffMap = np.exp(-((tmpRadiusMap)**2)/(2.0*gaussFallOffSigma**2));
+	fallOffMap[fallOffMap < 0.000001] = 0.0;
+
+	mask = fallOffMap;
+	mask[tmpRadiusMap<0.0] = 1.0;
+
+	return mask;
+
 #-------------------------------------------------------------------------------------
 def estimateNoiseFromMapInsideMask(map, mask):
 
@@ -115,12 +157,77 @@ def estimateNoiseFromMapInsideMask(map, mask):
 	return mean, var, sampleMap;
 
 #-------------------------------------------------------------------------------------
-def estimateNoiseFromHalfMaps(halfmap1, halfmap2, circularMask):
+def estimateNoiseFromHalfMaps(halfMap1, halfMap2, boxSize, stepSize):
 
-	halfmapDiff = halfmap1 - halfmap2;
-	varianceBackground = np.var(halfmapDiff[circularMask>0.5]);
 
-	return varianceBackground;
+	sizeMap = halfMap1.shape;
+	halfBoxSize = int(boxSize/ 2.0);
+	circularMask = makeCircularMask(halfMap1, (sizeMap[0]/2)-boxSize);
+
+	#init local variance map
+	locVar = np.zeros((len(range(boxSize, boxSize + sizeMap[0], stepSize)),
+					   len(range(boxSize, boxSize + sizeMap[1], stepSize)),
+					   len(range(boxSize, boxSize + sizeMap[2], stepSize))));
+
+	paddedHalfMap1 = np.zeros((sizeMap[0] + 2 * boxSize, sizeMap[1] + 2 * boxSize, sizeMap[2] + 2 * boxSize));
+	paddedHalfMap2 = np.zeros((sizeMap[0] + 2 * boxSize, sizeMap[1] + 2 * boxSize, sizeMap[2] + 2 * boxSize));
+	paddedMask = np.zeros((sizeMap[0] + 2 * boxSize, sizeMap[1] + 2 * boxSize, sizeMap[2] + 2 * boxSize));
+
+	paddedHalfMap1[boxSize: boxSize + sizeMap[0], boxSize: boxSize + sizeMap[1],
+	boxSize: boxSize + sizeMap[2]] = halfMap1;
+	paddedHalfMap2[boxSize: boxSize + sizeMap[0], boxSize: boxSize + sizeMap[1],
+	boxSize: boxSize + sizeMap[2]] = halfMap2;
+	paddedMask[boxSize: boxSize + sizeMap[0], boxSize: boxSize + sizeMap[1], boxSize: boxSize + sizeMap[2]] = circularMask;
+
+
+	for i in range(boxSize, boxSize + sizeMap[0], stepSize):
+
+		iInd = int((i-boxSize)/stepSize);
+		jInd = 0;
+
+		for j in range(boxSize, boxSize + sizeMap[1], stepSize):
+
+			kInd = 0;
+
+			for k in range(boxSize, boxSize + sizeMap[2], stepSize):
+
+				if paddedMask[i, j, k] > 0.99:
+
+					window_halfmap1 = paddedHalfMap1[i - halfBoxSize: i - halfBoxSize + boxSize,
+									  j - halfBoxSize: j - halfBoxSize + boxSize,
+									  k - halfBoxSize: k - halfBoxSize + boxSize];
+					window_halfmap2 = paddedHalfMap2[i - halfBoxSize: i - halfBoxSize + boxSize,
+									  j - halfBoxSize: j - halfBoxSize + boxSize,
+									  k - halfBoxSize: k - halfBoxSize + boxSize];
+
+					tmpVar = np.var(window_halfmap2 - window_halfmap1) ;
+
+					locVar[iInd, jInd, kInd] = 0.25*tmpVar;
+
+				else:
+					locVar[iInd, jInd, kInd] = 100.0;
+
+				kInd = kInd + 1;
+
+			jInd = jInd + 1;
+
+	print("Interpolating local Variances ...");
+	x = np.linspace(1, 10, locVar.shape[0]);
+	y = np.linspace(1, 10, locVar.shape[1]);
+	z = np.linspace(1, 10, locVar.shape[2]);
+
+	myInterpolatingFunction = RegularGridInterpolator((x, y, z), locVar, method='linear')
+
+	xNew = np.linspace(1, 10, sizeMap[0]);
+	yNew = np.linspace(1, 10, sizeMap[1]);
+	zNew = np.linspace(1, 10, sizeMap[2]);
+
+	xInd, yInd, zInd = np.meshgrid(xNew, yNew, zNew, indexing='ij', sparse=True);
+
+	locVar = myInterpolatingFunction((xInd, yInd, zInd));
+
+
+	return locVar;
 
 #-------------------------------------------------------------------------------------
 def estimateECDFFromMap(map, windowSize, boxCoord):

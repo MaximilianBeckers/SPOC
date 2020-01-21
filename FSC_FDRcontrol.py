@@ -79,6 +79,8 @@ def main():
 	splitFilename = os.path.splitext(os.path.basename(args.halfmap1));
 	outputFilename_LocRes = splitFilename[0] + "_localResolutions.mrc";
 	outputFilename_PostProcessed = splitFilename[0] + "_postProcessed.mrc";
+	outputFilename_PostProcessed_half1 = splitFilename[0] + "_postProcessed_half1.mrc";
+	outputFilename_PostProcessed_half2 = splitFilename[0] + "_postProcessed_half2.mrc";
 	outputFilename_averagedHalfmaps = splitFilename[0] + "_avg.mrc";
 
 	#handle window size for local FSC
@@ -134,6 +136,8 @@ def main():
 
 			#estimate b-factor and sharpen the map
 			bFactor = FSCutil.estimateBfactor(0.5*(halfMap1Data+halfMap2Data), resolution, apix, maskBFactor);
+			bFactor_half1 = FSCutil.estimateBfactor(halfMap1Data, resolution, apix, maskBFactor);
+			bFactor_half2 = FSCutil.estimateBfactor(halfMap2Data, resolution, apix, maskBFactor);
 
 			if args.bFactor is not None:
 				bFactor = args.bFactor;
@@ -143,13 +147,29 @@ def main():
 
 			processedMap = FDRutil.sharpenMap(0.5*(halfMap1Data+halfMap2Data), -bFactor, apix, resolution);
 
-			#write the post-processed map
+			processed_halfMap1 = FDRutil.sharpenMap(halfMap1Data, -bFactor_half1, apix, resolution);
+			processed_halfMap2 = FDRutil.sharpenMap(halfMap2Data, -bFactor_half2, apix, resolution);
+
+			#write the post-processed maps
 			postProcMRC = mrcfile.new(outputFilename_PostProcessed, overwrite=True);
 			postProc= np.float32(processedMap);
 			postProcMRC.set_data(postProc);
 			postProcMRC.voxel_size = apix;
 			postProcMRC.close();
-			
+
+			#write the post-processed halfmaps
+			postProcMRC = mrcfile.new(outputFilename_PostProcessed_half1, overwrite=True);
+			postProc= np.float32(processed_halfMap1);
+			postProcMRC.set_data(postProc);
+			postProcMRC.voxel_size = apix;
+			postProcMRC.close();
+
+			postProcMRC = mrcfile.new(outputFilename_PostProcessed_half2, overwrite=True);
+			postProc= np.float32(processed_halfMap2);
+			postProcMRC.set_data(postProc);
+			postProcMRC.voxel_size = apix;
+			postProcMRC.close();
+
 			output = "Saved sharpened and filtered map to: " + outputFilename_PostProcessed;
 			print(output);
 
