@@ -275,8 +275,8 @@ def estimateBfactor(map, resolution, apix, maskData):
 	plt.savefig("GuinierPlot.pdf", dpi=300);
 	plt.close();
 
-	output = "Estimated B-factor of the provided map: %.2f" % (-4.0*bFactor);
-	print(output);
+	#output = "Estimated B-factor of the provided map: %.2f" % (-4.0*bFactor);
+	#print(output);
 
 	return -4.0*bFactor;
 

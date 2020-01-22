@@ -162,12 +162,12 @@ def estimateNoiseFromHalfMaps(halfMap1, halfMap2, boxSize, stepSize):
 
 	sizeMap = halfMap1.shape;
 	halfBoxSize = int(boxSize/ 2.0);
-	circularMask = makeCircularMask(halfMap1, (sizeMap[0]/2)-boxSize);
+	circularMask = makeCircularMask(halfMap1, (sizeMap[0]/2)- boxSize);
 
 	#init local variance map
 	locVar = np.zeros((len(range(boxSize, boxSize + sizeMap[0], stepSize)),
 					   len(range(boxSize, boxSize + sizeMap[1], stepSize)),
-					   len(range(boxSize, boxSize + sizeMap[2], stepSize))));
+					   len(range(boxSize, boxSize + sizeMap[2], stepSize)))) + 1;
 
 	paddedHalfMap1 = np.zeros((sizeMap[0] + 2 * boxSize, sizeMap[1] + 2 * boxSize, sizeMap[2] + 2 * boxSize));
 	paddedHalfMap2 = np.zeros((sizeMap[0] + 2 * boxSize, sizeMap[1] + 2 * boxSize, sizeMap[2] + 2 * boxSize));
@@ -546,6 +546,8 @@ def calcQMap(map, mean, var, ECDF, windowSize, boxCoord, mask, method, test):
 	binaryMask[ binaryMask ==  0.0] = np.nan;
 
 	pMap = pMap * binaryMask;
+
+
 	pFlat = pMap.flatten();
 	pInBall = pFlat[~np.isnan(pFlat)];
 
@@ -697,7 +699,7 @@ def calculate_frequency_map(map):
 def lowPassFilter(mapFFT, frequencyMap, cutoff, shape):
 
 	#**********************************
-	#*** filter in fourier domain *****
+	#*** Filter in fourier domain *****
 	#**********************************
 
 	sizeMap = mapFFT.shape;

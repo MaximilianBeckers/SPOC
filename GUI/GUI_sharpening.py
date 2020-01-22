@@ -195,9 +195,9 @@ class SharpeningWindow(QWidget):
 			path = os.path.dirname(self.fileLine_halfMap1.text());
 		os.chdir(path);
 		splitFilename = os.path.splitext(os.path.basename(self.fileLine_halfMap1.text()));
-		outputFilename_PostProcessed =  splitFilename[0] + "_postProcessed.mrc";
-		outputFilename_PostProcessed_half1 = splitFilename[0] + "_postProcessed_half1.mrc";
-		outputFilename_PostProcessed_half2 = splitFilename[0] + "_postProcessed_half2.mrc";
+		outputFilename_PostProcessed =  "postProcessed.mrc";
+		outputFilename_PostProcessed_half1 = "postProcessed_half1.mrc";
+		outputFilename_PostProcessed_half2 = "postProcessed_half2.mrc";
 
 		# make the mask
 		maskData = FSCutil.makeCircularMask(halfMap1Data, (np.min(halfMap1Data.shape) / 2.0) - 4.0);  # circular mask
@@ -267,8 +267,8 @@ class SharpeningWindow(QWidget):
 			bFactor_half1 = FSCutil.estimateBfactor(halfMap1Data, resolution, apix, maskBFactor);
 			bFactor_half2 = FSCutil.estimateBfactor(halfMap2Data, resolution, apix, maskBFactor);
 
-			#print("B-factor of halfmap 1: {:.2f}".format(bFactor_half1));
-			#print("B-factor of halfmap 2: {:.2f}".format(bFactor_half2));
+			print("B-factor of halfmap 1: {:.2f}".format(bFactor_half1));
+			print("B-factor of halfmap 2: {:.2f}".format(bFactor_half2));
 
 		processedMap = FDRutil.sharpenMap(0.5 * (halfMap1Data + halfMap2Data), -bFactor, apix, resolution);
 		processed_halfMap1 = FDRutil.sharpenMap(halfMap1Data, -bFactor_half1, apix, resolution);

@@ -83,6 +83,13 @@ def main():
 	else:
 		varMapData = None;
 
+	# if meanMap is given, use it
+	if args.meanMap is not None:
+		meanMap = mrcfile.open(args.meanMap, mode='r');
+		meanMapData = np.copy(meanMap.data);
+	else:
+		meanMapData = None;
+
 	# load the maps
 	if args.halfmap2 is not None:
 		if args.em_map is None:
@@ -94,12 +101,14 @@ def main():
 			map1 = mrcfile.open(args.em_map, mode='r');
 			apix = float(map1.voxel_size.x);
 			halfMapData1 = np.copy(map1.data);
+			sizeMap = halfMapData1.shape;
 
 			map2 = mrcfile.open(args.halfmap2, mode='r');
 			halfMapData2 = np.copy(map2.data);
 
 			print("Estimating local noise levels ...")
 			varMapData = FDRutil.estimateNoiseFromHalfMaps(halfMapData1, halfMapData2, 20, 2);
+			meanMapData = np.zeros(varMapData.shape)
 
 			mapData = (halfMapData1 + halfMapData2) * 0.5;
 			halfMapData1 = 0;
@@ -126,14 +135,6 @@ def main():
 	else:
 		splitFilename = os.path.splitext(os.path.basename(filename));
 
-
-
-	# if meanMap is given, use it
-	if args.meanMap is not None:
-		meanMap = mrcfile.open(args.meanMap, mode='r');
-		meanMapData = np.copy(meanMap.data);
-	else:
-		meanMapData = None;
 
 	# if local resolutions are given, use them
 	if args.locResMap is not None:
@@ -218,7 +219,7 @@ def main():
 	confidenceMapMRC.close();
 
 	# write the confidence Maps
-	confidenceMapMRC = mrcfile.new(splitFilename[0] + '_confidenceMap_-log10pValue.mrc', overwrite=True);
+	confidenceMapMRC = mrcfile.new(splitFilename[0] + '_confidenceMap_-log10FDR.mrc', overwrite=True);
 	confidenceMap = np.float32(1.0 - confidenceMap);
 	confidenceMap[confidenceMap == 0] = 0.0000000001;
 	confidenceMapMRC.set_data(-np.log10(confidenceMap));

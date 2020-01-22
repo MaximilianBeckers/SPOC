@@ -77,10 +77,11 @@ def main():
 
 	# set output filename
 	splitFilename = os.path.splitext(os.path.basename(args.halfmap1));
+	print(splitFilename[0])
 	outputFilename_LocRes = splitFilename[0] + "_localResolutions.mrc";
-	outputFilename_PostProcessed = splitFilename[0] + "_postProcessed.mrc";
-	outputFilename_PostProcessed_half1 = splitFilename[0] + "_postProcessed_half1.mrc";
-	outputFilename_PostProcessed_half2 = splitFilename[0] + "_postProcessed_half2.mrc";
+	outputFilename_PostProcessed = "postProcessed.mrc";
+	outputFilename_PostProcessed_half1 = "postProcessed_half1.mrc";
+	outputFilename_PostProcessed_half2 = "postProcessed_half2.mrc";
 	outputFilename_averagedHalfmaps = splitFilename[0] + "_avg.mrc";
 
 	#handle window size for local FSC
