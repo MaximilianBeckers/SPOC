@@ -7,7 +7,6 @@ import math
 
 #Author: Maximilian Beckers, EMBL Heidelberg, Sachse Group (2019)
 
-
 #------------------------------------------------------------------------------------------------------
 def localFiltration(map, locResMap, apix, localVariance, windowSize, boxCoord, ECDF):
 
@@ -31,7 +30,8 @@ def localFiltration(map, locResMap, apix, localVariance, windowSize, boxCoord, E
 	locResMapData[locResMapData >= 100.0] = 100.0;
 
 	#transform to abosulte frequency units(see http://sparx-em.org/sparxwiki/absolute_frequency_units)
-	locResMapData = np.divide(apix, locResMapData);
+	with np.errstate(all='ignore'):
+		locResMapData = np.divide(apix, locResMapData);
 	
 	#round to 3 decimals
 	locResMapData = np.around(locResMapData, 3);	
