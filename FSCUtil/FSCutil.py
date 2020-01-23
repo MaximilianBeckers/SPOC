@@ -579,7 +579,7 @@ def threeDimensionalFSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits
 			tmpFSC[0] = 0.0;
 			tmpFSC[1] = 0.0;
 
-			print(tmpFSC);
+			#print(tmpFSC);
 
 			try:
 				resolution = np.min(np.argwhere(tmpFSC)) - 1;

@@ -137,10 +137,9 @@ class LocalFilteringWindow(QWidget):
 		return btn;
 
 	def onInputFileButtonClicked_map(self):
-		filename = QFileDialog.getOpenFileNames(caption='Open file');
-
+		filename = QFileDialog.getOpenFileName(caption='Open file');
 		if filename:
-			self.fileLine.setText(filename[0][0]);
+			self.fileLine.setText(filename[0]);
 
 	def searchFileButton_locResMap(self):
 		btn = QPushButton('Search File');
@@ -148,10 +147,10 @@ class LocalFilteringWindow(QWidget):
 		return btn;
 
 	def onInputFileButtonClicked_locResMap(self):
-		filename = QFileDialog.getOpenFileNames(caption='Open file');
+		filename = QFileDialog.getOpenFileName(caption='Open file');
 
 		if filename:
-			self.fileLine_locResMap.setText(filename[0][0]);
+			self.fileLine_locResMap.setText(filename[0]);
 
 	def searchFileButton_output(self):
 		btn = QPushButton('Search File');
