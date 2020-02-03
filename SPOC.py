@@ -56,8 +56,8 @@ class Window(QWidget):
 		self.leftlistEM.insertItem(4, 'Local resolution filtering');
 		self.leftlistEM.insertItem(5, 'Confidence maps');
 
-		self.LMlabel = QLabel("Single Molecule Localization Microscopy", self);
-		self.LMlabel.setFont(QFont('Arial', 17));
+		#self.LMlabel = QLabel("Single Molecule Localization Microscopy", self);
+		#self.LMlabel.setFont(QFont('Arial', 17));
 
 		self.leftlistLM = QListWidget();
 		self.leftlistLM.insertItem(0, 'Global resolution estimation by FDR-FSC');
@@ -66,8 +66,8 @@ class Window(QWidget):
 		self.leftLayout = QVBoxLayout();
 		self.leftLayout.addWidget(self.EMlabel);
 		self.leftLayout.addWidget(self.leftlistEM);
-		self.leftLayout.addWidget(self.LMlabel);
-		self.leftLayout.addWidget(self.leftlistLM);
+		#self.leftLayout.addWidget(self.LMlabel);
+		#self.leftLayout.addWidget(self.leftlistLM);
 
 
 		self.stack1 = GUI_resolutions.ResolutionWindow();

@@ -57,7 +57,7 @@ class ResolutionWindow(QWidget):
 
 		self.numAsUnit = QLineEdit();
 		self.numAsUnit.setText('None');
-		layout.addRow('# asym. units', self.numAsUnit);
+		layout.addRow('# asym. units in the map', self.numAsUnit);
 
 
 		# add output directory

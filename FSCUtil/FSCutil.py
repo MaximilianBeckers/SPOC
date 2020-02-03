@@ -458,7 +458,6 @@ def threeDimensionalFSC(halfMap1, halfMap2, maskData, apix, cutoff, numAsymUnits
 	sizeMap = halfMap1.shape;
 
 
-
 	# calc frequency for each voxel
 	freqi = np.fft.fftfreq(sizeMap[0], 1.0);
 	freqj = np.fft.fftfreq(sizeMap[1], 1.0);

@@ -111,7 +111,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 
 	#parallelized local resolutions
 	numCores = min(multiprocessing.cpu_count(),4);
-	print("Using {:d} cores. This might take 5 minutes ...".format(numCores));
+	print("Using {:d} cores. This might take a few minutes ...".format(numCores));
 	iIterable = range(boxSize, boxSize + sizeMap[0], stepSize);
 
 	#initialize parallel processes
@@ -141,6 +141,8 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 	# ********** do interpolation *********
 	# *************************************
 
+	#locRes[locRes==0] = 2.2;
+
 	print("Interpolating local Resolutions ...");
 	x = np.linspace(1, 10, locRes.shape[0]);
 	y = np.linspace(1, 10, locRes.shape[1]);
@@ -156,7 +158,7 @@ def localResolutions(halfMap1, halfMap2, boxSize, stepSize, cutoff, apix, numAsy
 
 	localRes = myInterpolatingFunction((xInd, yInd, zInd));
 
-	localRes[mask <= 0.1] = 0.0;
+	localRes[mask <= 0.01] = 0.0;
 
 	return localRes;
 

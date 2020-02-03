@@ -79,7 +79,7 @@ class ResolutionWindow(QWidget):
 		searchButton_mask = self.searchFileButton_mask();
 		hbox_mask.addWidget(self.fileLine_mask);
 		hbox_mask.addWidget(searchButton_mask);
-		layout.addRow('Mask', hbox_mask);
+		layout.addRow('Mask for local model-map resolution estimation', hbox_mask);
 
 		# add output directory
 		hbox_output = QHBoxLayout();
