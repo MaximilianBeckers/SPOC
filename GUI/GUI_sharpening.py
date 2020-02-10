@@ -258,6 +258,8 @@ class SharpeningWindow(QWidget):
 
 		if bFactorInput is not None:
 			bFactor = bFactorInput;
+			bFactor_half1 = bFactorInput;
+			bFactor_half2 = bFactorInput;
 			print('Using a user-specified B-factor of {:.2f} for map sharpening'.format(-bFactor));
 		else:
 			# estimate b-factor and sharpen the map
