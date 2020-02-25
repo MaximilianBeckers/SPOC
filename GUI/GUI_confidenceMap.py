@@ -30,7 +30,7 @@ class ConfMapWindow(QWidget):
 		searchButton = self.searchFileButton_inputFilename();
 		hbox.addWidget(self.fileLine);
 		hbox.addWidget(searchButton);
-		layout.addRow('EM Map', hbox);
+		layout.addRow('sharpened EM Map', hbox);
 
 		# add box size for background noise estimation
 		self.boxSize = QLineEdit();
