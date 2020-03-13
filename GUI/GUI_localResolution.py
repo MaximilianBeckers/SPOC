@@ -66,21 +66,6 @@ class ResolutionWindow(QWidget):
 		self.lowRes.setText('None');
 		layout.addRow('Low resolution limit [A]', self.lowRes);
 
-		# make some space
-		layout.addRow('', QHBoxLayout());
-		layout.addRow('', QHBoxLayout());
-		# some buttons
-		qtBtn = self.quitButton();
-		runBtn = self.FSCBtn();
-
-		# add mask
-		hbox_mask = QHBoxLayout();
-		self.fileLine_mask = QLineEdit();
-		searchButton_mask = self.searchFileButton_mask();
-		hbox_mask.addWidget(self.fileLine_mask);
-		hbox_mask.addWidget(searchButton_mask);
-		layout.addRow('Mask for local model-map resolution estimation', hbox_mask);
-
 		# add output directory
 		hbox_output = QHBoxLayout();
 		self.fileLine_output = QLineEdit();
@@ -88,6 +73,27 @@ class ResolutionWindow(QWidget):
 		hbox_output.addWidget(self.fileLine_output);
 		hbox_output.addWidget(searchButton_output);
 		layout.addRow('Save output to ', hbox_output);
+
+		# make some space
+		layout.addRow('', QHBoxLayout());
+		layout.addRow('', QHBoxLayout());
+		layout.addRow('', QHBoxLayout());
+		layout.addRow('', QHBoxLayout());
+		layout.addRow('', QHBoxLayout());  # make some space
+		layout.addRow('', QHBoxLayout());  # make some space
+
+		# some buttons
+		qtBtn = self.quitButton();
+		runBtn = self.FSCBtn();
+
+		# add mask
+		#hbox_mask = QHBoxLayout();
+		#self.fileLine_mask = QLineEdit();
+		#searchButton_mask = self.searchFileButton_mask();
+		#hbox_mask.addWidget(self.fileLine_mask);
+		#hbox_mask.addWidget(searchButton_mask);
+		#layout.addRow('Mask for local model-map resolution estimation', hbox_mask);
+
 
 		buttonBox = QHBoxLayout();
 		buttonBox.addWidget(qtBtn);
@@ -130,15 +136,15 @@ class ResolutionWindow(QWidget):
 		if filename:
 			self.fileLine_halfMap2.setText(filename[0]);
 
-	def searchFileButton_mask(self):
-		btn = QPushButton('Search File');
-		btn.clicked.connect(self.onInputFileButtonClicked_mask);
-		return btn;
+	#def searchFileButton_mask(self):
+	#	btn = QPushButton('Search File');
+	#	btn.clicked.connect(self.onInputFileButtonClicked_mask);
+	#	return btn;
 
-	def onInputFileButtonClicked_mask(self):
-		filename = QFileDialog.getOpenFileName(caption='Open file');
-		if filename:
-			self.fileLine_mask.setText(filename[0]);
+	#def onInputFileButtonClicked_mask(self):
+	#	filename = QFileDialog.getOpenFileName(caption='Open file');
+	#	if filename:
+	#		self.fileLine_mask.setText(filename[0]);
 
 	def searchFileButton_output(self):
 		btn = QPushButton('Search File');
