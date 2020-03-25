@@ -266,15 +266,15 @@ class SharpeningWindow(QWidget):
 			bFactor = FSCutil.estimateBfactor(0.5 * (halfMap1Data + halfMap2Data), resolution, apix, maskBFactor);
 			print('Using a B-factor of {:.2f} for map sharpening.'.format(-bFactor));
 
-			bFactor_half1 = FSCutil.estimateBfactor(halfMap1Data, resolution, apix, maskBFactor);
-			bFactor_half2 = FSCutil.estimateBfactor(halfMap2Data, resolution, apix, maskBFactor);
+			#bFactor_half1 = FSCutil.estimateBfactor(halfMap1Data, resolution, apix, maskBFactor);
+			#bFactor_half2 = FSCutil.estimateBfactor(halfMap2Data, resolution, apix, maskBFactor);
 
-			print("B-factor of halfmap 1: {:.2f}".format(bFactor_half1));
-			print("B-factor of halfmap 2: {:.2f}".format(bFactor_half2));
+			#print("B-factor of halfmap 1: {:.2f}".format(bFactor_half1));
+			#print("B-factor of halfmap 2: {:.2f}".format(bFactor_half2));
 
 		processedMap = FDRutil.sharpenMap(0.5 * (halfMap1Data + halfMap2Data), -bFactor, apix, resolution);
-		processed_halfMap1 = FDRutil.sharpenMap(halfMap1Data, -bFactor_half1, apix, resolution);
-		processed_halfMap2 = FDRutil.sharpenMap(halfMap2Data, -bFactor_half2, apix, resolution);
+		#processed_halfMap1 = FDRutil.sharpenMap(halfMap1Data, -bFactor_half1, apix, resolution);
+		#processed_halfMap2 = FDRutil.sharpenMap(halfMap2Data, -bFactor_half2, apix, resolution);
 
 		# write the post-processed map
 		postProcMRC = mrcfile.new(outputFilename_PostProcessed, overwrite=True);
@@ -283,6 +283,7 @@ class SharpeningWindow(QWidget):
 		postProcMRC.voxel_size = apix;
 		postProcMRC.close();
 
+		"""
 		# write the post-processed halfmaps
 		postProcMRC = mrcfile.new(outputFilename_PostProcessed_half1, overwrite=True);
 		postProc = np.float32(processed_halfMap1);
@@ -295,6 +296,7 @@ class SharpeningWindow(QWidget):
 		postProcMRC.set_data(postProc);
 		postProcMRC.voxel_size = apix;
 		postProcMRC.close();
+		"""
 
 		output = "Saved sharpened and filtered map to: " + outputFilename_PostProcessed;
 		print(output);

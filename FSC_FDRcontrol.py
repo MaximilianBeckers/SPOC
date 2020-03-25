@@ -137,8 +137,8 @@ def main():
 
 			#estimate b-factor and sharpen the map
 			bFactor = FSCutil.estimateBfactor(0.5*(halfMap1Data+halfMap2Data), resolution, apix, maskBFactor);
-			bFactor_half1 = FSCutil.estimateBfactor(halfMap1Data, resolution, apix, maskBFactor);
-			bFactor_half2 = FSCutil.estimateBfactor(halfMap2Data, resolution, apix, maskBFactor);
+			#bFactor_half1 = FSCutil.estimateBfactor(halfMap1Data, resolution, apix, maskBFactor);
+			#bFactor_half2 = FSCutil.estimateBfactor(halfMap2Data, resolution, apix, maskBFactor);
 
 			if args.bFactor is not None:
 				bFactor = args.bFactor;
@@ -148,8 +148,8 @@ def main():
 
 			processedMap = FDRutil.sharpenMap(0.5*(halfMap1Data+halfMap2Data), -bFactor, apix, resolution);
 
-			processed_halfMap1 = FDRutil.sharpenMap(halfMap1Data, -bFactor_half1, apix, resolution);
-			processed_halfMap2 = FDRutil.sharpenMap(halfMap2Data, -bFactor_half2, apix, resolution);
+			#processed_halfMap1 = FDRutil.sharpenMap(halfMap1Data, -bFactor_half1, apix, resolution);
+			#processed_halfMap2 = FDRutil.sharpenMap(halfMap2Data, -bFactor_half2, apix, resolution);
 
 			#write the post-processed maps
 			postProcMRC = mrcfile.new(outputFilename_PostProcessed, overwrite=True);
@@ -158,6 +158,7 @@ def main():
 			postProcMRC.voxel_size = apix;
 			postProcMRC.close();
 
+			"""
 			#write the post-processed halfmaps
 			postProcMRC = mrcfile.new(outputFilename_PostProcessed_half1, overwrite=True);
 			postProc= np.float32(processed_halfMap1);
@@ -170,6 +171,7 @@ def main():
 			postProcMRC.set_data(postProc);
 			postProcMRC.voxel_size = apix;
 			postProcMRC.close();
+			"""
 
 			output = "Saved sharpened and filtered map to: " + outputFilename_PostProcessed;
 			print(output);
