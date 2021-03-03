@@ -7,8 +7,6 @@ as resolution estimation (global and local) by permutation testing and false dis
 
 **If you found SPoC useful for your work, please consider citing the following articles:**
 
-For resolution estimation: 
-
 Beckers M., and Sachse C. (2020) Permutation testing of Fourier shell correlation for resolution estimation of cryo-EM maps. J Struct Biol 212, 107579
 
 If you found the confidence maps useful, the following article is the main resource for reference:
