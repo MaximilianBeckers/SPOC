@@ -2,7 +2,7 @@
 
 SPOC, short for Statistical Processing of cryo-EM maps, is a software package
 which contains statistical tools for the analysis and processing of cryo-EM maps.
-Included are tools for Condence Map generation, local map processing as well
+Included are tools for Confidence Map generation, local map processing as well
 as resolution estimation (global and local) by permutation testing and false discovery rate control.
 
 **If you found SPoC useful for your work, please consider citing the following articles:**
