@@ -1,4 +1,4 @@
-*SPOC - Statistical Processing of cryo-EM maps*
+***SPOC - Statistical Processing of cryo-EM maps***
 
 SPOC, short for Statistical Processing of cryo-EM maps, is a software package
 which contains statistical tools for the analysis and processing of cryo-EM maps.
